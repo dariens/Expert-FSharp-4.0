@@ -315,7 +315,165 @@ consoleString
 
 
 
+/// Combining Functional and Imperative Efficient Precomputation and Caching
+
+/// Precomputation and Partial Application
+
+let isWord (words : string list) =
+    let wordTable = Set.ofList words
+    fun w -> wordTable.Contains(w)
+
+let isCapital = isWord ["London"; "Paris"; "Warsaw"; "Tokyo"]
+
+isCapital "Paris"
+
+isCapital "Darien"
+
+// Version of isWord with HashSet
+open System.Collections.Generic
+
+let isWord2 (words : string list) =
+    let wordTable = HashSet<string>(words)
+    fun word -> wordTable.Contains word
+
+
+/// Precomputation and Objects
+
+
+open System
+
+
+type NameLookupService =
+    abstract Contains : string -> bool
+    abstract StartsWithL : string -> bool
+
+let buildSimpleNameLookup (words : string list) =
+    let wordTable = HashSet<_>(words)
+    {new NameLookupService with
+        member t.Contains w = wordTable.Contains w
+        member t.StartsWithL w = w.[0] = 'L'}
+
+let capitalLookup2 = buildSimpleNameLookup ["London"; "Paris"; "Warsaw"; "Tokyo"]
+
+capitalLookup2.Contains "Paris"
+capitalLookup2.StartsWithL "London"
+capitalLookup2.StartsWithL "Paris"
+
+/// Memoizing Computations
+
+let fibFast =
+    let t = new System.Collections.Generic.Dictionary<int, int>()
+    let rec fibCached n =
+        match n with
+        | n when t.ContainsKey n -> printfn "cached value"; t.[n]
+        | n when n <= 2 -> printfn "0, 1, or 2"; 1
+        | _ -> 
+            printfn "greater than 2"
+            let res = fibCached (n - 1) + fibCached (n - 2)
+            t.Add (n, res)
+            res
+    fun n -> fibCached n
+
+
+fibFast 0
+fibFast 1
+fibFast 2
+fibFast 3
+fibFast 4
+fibFast 5
+fibFast 5
+fibFast 10
+fibFast 11
 
 
 
+let time f =
+    let sw = System.Diagnostics.Stopwatch.StartNew()
+    let res = f()
+    let finish = sw.Stop()
+    (res, sw.Elapsed.TotalMilliseconds |> sprintf "%f ms")
 
+time(fun () -> fibFast 30)
+time(fun () -> fibFast 30)
+
+/// A generic memoization function
+
+open System.Collections.Generic
+
+let memoize (f : 'T -> 'U) =
+    let t = new Dictionary<'T, 'U>(HashIdentity.Structural)
+    fun n ->
+        if t.ContainsKey n then t.[n]
+        else
+            let res = f n
+            t.Add (n, res)
+            res
+
+let rec fibFast2 =
+    memoize (fun n -> 
+                 if n <=2 then 1
+                 else fibFast (n-1) + fibFast (n-2))
+
+time (fun () -> fibFast2 30)
+time (fun () -> fibFast2 30)
+
+
+/// A generic memoization service
+
+open System.Collections.Generic
+
+type Table<'T, 'U> =
+    abstract Item : 'T -> 'U with get
+    abstract Discard : unit -> unit
+
+let memoizeAndPermitDiscard f =
+    let lookasideTable = new Dictionary<_, _>(HashIdentity.Structural)
+    { new Table<'T, 'U> with
+        member t.Item
+            with get(n) =
+                if lookasideTable.ContainsKey(n) then
+                    lookasideTable.[n]
+                else
+                    let res = f n
+                    lookasideTable.Add(n, res)
+                    res
+        member t.Discard() =
+            lookasideTable.Clear()}
+
+#nowarn "40"
+let rec fibFast3 =
+    memoizeAndPermitDiscard (fun n ->
+        printfn "computing fibFast %d" n
+        if n<=2 then 1 else fibFast3.[n - 1] + fibFast3.[n - 2])
+
+fibFast3.[3]
+fibFast3.[3]
+fibFast3.[30]
+
+fibFast3.[30]
+
+fibFast3.Discard()
+
+fibFast3
+
+fibFast3.[30]
+fibFast3
+
+
+/// Lazy Values
+
+let sixty = lazy (30 + 30)
+
+sixty.Force() * 2
+
+let f x = lazy (x * x)
+
+let fx = f 10
+
+fx.Force()
+
+let sixtyWithSideEffect = lazy (printfn "Hello World"; 30 + 30)
+
+sixtyWithSideEffect.Force()
+
+sixtyWithSideEffect.Force()
