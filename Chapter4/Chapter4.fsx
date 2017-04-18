@@ -477,3 +477,102 @@ let sixtyWithSideEffect = lazy (printfn "Hello World"; 30 + 30)
 sixtyWithSideEffect.Force()
 
 sixtyWithSideEffect.Force()
+
+/// Mutable Reference Cells
+
+let refCell = ref 1
+
+printfn "%A" (refCell.Value, refCell.contents)
+
+refCell := 3
+
+printfn "%A" (refCell.Value, refCell.contents)
+
+refCell.contents <- 5
+
+printfn "%A" (refCell.Value, refCell.contents)
+
+/// Combining Functional and IMperative: Functional Programming with Side Effects
+
+/// Consider Replacing Mutable Locals and Loops with Recursion
+
+let factorizeImperative n =
+    let mutable factor1 = 1
+    let mutable factor2 = n
+    let mutable i = 2
+    let mutable fin = false
+    while (i < n && not fin) do
+        if (n % i = 0) then
+            factor1 <- i
+            factor2 <- n/i
+            fin <- true
+        i <- i + 1
+    if (factor1 = 1) then (n, None)
+    else (n, Some (factor1, factor2))
+
+let factorizeRecursive n =
+    let rec find i =
+        if i >=n then (n, None)
+        elif (n % i = 0) then (n, Some(i, n / i))
+        else find (i + 1)
+    find 2
+
+let getPrime x =
+    match x with
+    | (n, None) -> Some n
+    | _ -> None
+
+let primesToN n =
+    [1..n]
+        |> List.map factorizeRecursive
+        |> List.map getPrime
+        |> List.filter (fun x -> x = None = false && x = Some 1 = false)
+
+primesToN 100
+
+/// Separating Mutable Data Structures
+
+open System.Collections.Generic
+
+let divideIntoEquivalenceClasses keyf seq =
+    // The dictionary to hold the equivalence classes
+    let dict = new Dictionary<'key, ResizeArray<'T>>()
+    // Build the groupings
+    seq |> Seq.iter (fun v ->
+        let key = keyf v
+        let ok, prev = dict.TryGetValue(key)
+        if ok then prev.Add(v)
+        else let prev = new ResizeArray<'T>()
+             dict.[key] <- prev
+             prev.Add(v))
+    // Return the sequence-sequences. Don't reveal the
+    // internal collections: just reveal them as sequences
+    dict |> Seq.map (fun group -> group.Key, Seq.readonly group.Value)
+
+divideIntoEquivalenceClasses (fun n -> n % 4) [0..10]
+
+divideIntoEquivalenceClasses (fun (n : string) -> n.Contains("A"))
+                             ["A"; "ABC"; "DEF"; "HEY"; "HEYA"; "HEY"]
+
+
+/// Avoid COmbining Imperative Programming and Laziness
+
+open System.IO
+
+let line1, line2 =
+    let reader = new StreamReader(File.OpenRead("temp.txt"))
+    let firstLine = reader.ReadLine()
+    let secondLine = reader.ReadLine()
+    reader.Close()
+    firstLine, secondLine
+
+let linesOfFile =
+    seq { use reader = new StreamReader(File.OpenRead(__SOURCE_DIRECTORY__ + "/temp.txt"))
+          while not reader.EndOfStream do
+              yield reader.ReadLine() }
+
+linesOfFile
+
+
+
+
