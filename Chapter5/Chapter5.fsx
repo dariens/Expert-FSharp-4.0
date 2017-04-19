@@ -304,7 +304,20 @@ let newJsonCar = jsonCar.Replace("BMW", "Mercedes")
 
 let newCar = JsonConvert.DeserializeObject<testUnion list>(newJsonCar)
 
-printfn "%A" newCar
+/// Using JsonConvert.DeserializeXMLNode to convert Json to XML
+#r "System.Xml.Linq.dll"
+open System.Xml.Linq
+open System.Security.Cryptography
+
+// Function to add object to beginning of json
+let formatJson firstObject json =
+    sprintf "{\"%s\": %s }" firstObject json
+
+let formatedJsonCar = formatJson "TestUnion_List" newJsonCar
+
+let node = JsonConvert.DeserializeXmlNode(formatedJsonCar, "root")
+node.Save(__SOURCE_DIRECTORY__ + "/testXML.xml")
+printfn "%A" node
 
 /// Making Things Generic
 
