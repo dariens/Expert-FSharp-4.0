@@ -317,7 +317,19 @@ let formatedJsonCar = formatJson "TestUnion_List" newJsonCar
 
 let node = JsonConvert.DeserializeXmlNode(formatedJsonCar, "root")
 node.Save(__SOURCE_DIRECTORY__ + "/testXML.xml")
-printfn "%A" node
+
+open System.IO
+
+
+let readLines (filePath:string) =
+    use sr = new StreamReader (filePath)
+    sr.ReadToEnd()
+        
+
+let xml = readLines (__SOURCE_DIRECTORY__ + "/testXML.xml")
+printfn "%A" xml
+
+
 
 /// Making Things Generic
 
