@@ -6,13 +6,13 @@ let squareAndAddf (a: float) b = a * a + b
 
 let s = "Couldn't put Humpty"
 
-s.Length
+//s.Length
 
-s.[13]
+//s.[13]
 
-s.[13..16]
+//s.[13..16]
 
-s = "Couldn't put Humpty"
+//s = "Couldn't put Humpty"
 
 let complete = "Couldn't put Humpty" + " " + "together again"
 
@@ -23,7 +23,7 @@ let round x =
     elif x < 0 then 0
     else x
 
-round 105
+//round 105
 
 let roundP x =
     match x with
@@ -38,7 +38,7 @@ let round2 (x, y) =
 
 let rec factorial n = if n <=1 then 1 else n * factorial (n - 1)
 
-factorial 5
+//factorial 5
 
 
 // example of List.length
@@ -48,7 +48,7 @@ let rec length l =
     | [] -> 0
     | h :: t -> 1 + length t
 
-length [0;1;2;3;4;5]
+//length [0;1;2;3;4;5]
 
 /// Using the .NET networking libraries from F#
 open System.IO
@@ -70,7 +70,7 @@ let rec repeatFetch url n =
         printfn "fetched <<< %s >>> on iteration %d" html n
         repeatFetch url (n - 1)
 
-repeatFetch "http://news.bbc.co.uk" 3
+//repeatFetch "http://news.bbc.co.uk" 3
 
 
 // mutually recursive functions
@@ -78,8 +78,8 @@ repeatFetch "http://news.bbc.co.uk" 3
 let rec even n = (n = 0u) || odd(n - 1u)
 and odd n = (n <> 0u) && even (n - 1u)
 
-even 9u
-odd 10u
+//even 9u
+//odd 10u
 
 /// LISTS
 
@@ -90,15 +90,15 @@ let primes = 2 :: (oddPrimes @ morePrimes)
 // Immutability
 let people = ["Adam";"Dominic";"James"]
 
-"Chris" :: people
+//"Chris" :: people
 
-people
+//people
 
 let numbers = [1;2;3;4;5]
 
-List.filter (fun x -> x%2 = 0) numbers
+//List.filter (fun x -> x%2 = 0) numbers
 
-List.map (fun x -> x%2 = 0) numbers
+//List.map (fun x -> x%2 = 0) numbers
 
 let key = ["1";"2";"3";"4";"5"]
 
@@ -118,9 +118,9 @@ let fetch url =
     try Some (http url)
     with :? System.Net.WebException -> None
 
-match (fetch "http://www.nature.tsts") with
-    | Some text -> printfn "text = %s" text
-    | None -> printfn "**** no web page found"
+//match (fetch "http://www.nature.tsts") with
+//    | Some text -> printfn "text = %s" text
+//    | None -> printfn "**** no web page found"
 
 
 /// Getting Started with Pattern matching
@@ -146,7 +146,7 @@ let showParents (name, parents) =
     | Some (None, None) -> printfn "%s has no parents" name
     | None -> printfn "%s has no parents!" name
 
-for person in people2 do showParents person
+//for person in people2 do showParents person
 
 /// Matching on structured values
 
@@ -156,8 +156,8 @@ let highLow a b =
     | ("hi", hi), ("lo", lo) -> (hi, lo)
     | _ -> failwith "expected both a high and a low value"
 
-highLow ("hi", 300) ("lo", 100)
-highLow ("lo", 100) ("hi", 300)
+//highLow ("hi", 300) ("lo", 100)
+//highLow ("lo", 100) ("hi", 300)
 
 let sign x =
     match x with
@@ -193,7 +193,7 @@ let primeCubes = List.map (fun n -> n * n * n) primes2
 
 let resultsOfFetch = List.map (fun url -> (url, http url)) sites
 
-List.map (fun (_,p) -> String.length p) resultsOfFetch
+//List.map (fun (_,p) -> String.length p) resultsOfFetch
 
 let delimiters = [| ' '; '\n'; '\t'; '<'; '>'; '='|]
 
@@ -208,11 +208,11 @@ let getStats site =
 
 let sites3 = ["www.bing.com"; "www.google.com"; "search.yahoo.com"]
 
-sites3 |> List.map getStats 
+//sites3 |> List.map getStats 
 
 /// Using Fluent Notation on Collections
 
-[1;2;3] |> List.map (fun x -> x * x * x)
+//[1;2;3] |> List.map (fun x -> x * x * x)
 
 let google = http "http://www.google.com"
 
@@ -220,7 +220,7 @@ let countLinks2 http = http |> getWords |> Array.filter (fun s -> s = "href") |>
 
 let countLinks = getWords >> Array.filter (fun s -> s = "href") >> Array.length
 
-google |> countLinks
+//google |> countLinks
 
 /// Building Functions with Partial Application
 
@@ -247,9 +247,9 @@ let rect2 = RectangleF(50.0f, 50.0f, 200.0f, 200.0f)
 
 let mapp = remap rect1 rect2
 
-mapp (PointF(100.0f, 100.0f))
-mapp (PointF(150.0f, 150.0f))
-mapp (PointF(200.0f, 200.0f))
+//mapp (PointF(100.0f, 100.0f))
+//mapp (PointF(150.0f, 150.0f))
+//mapp (PointF(200.0f, 200.0f))
 
 open System
 
@@ -259,14 +259,14 @@ let time f =
     let finish = DateTime.Now
     (res, finish - start)
 
-time (fun () -> http "http://www.newscientist.com")
+//time (fun () -> http "http://www.newscientist.com")
 
 /// Using Object Methods as First-Class Functions
 
 open System.IO
 
-[ "file1.txt"; "file2.txt"; "file3.sh" ]
-    |> List.map Path.GetExtension
+//[ "file1.txt"; "file2.txt"; "file3.sh" ]
+//    |> List.map Path.GetExtension
 
 let f = (Console.WriteLine : string -> unit)
 
