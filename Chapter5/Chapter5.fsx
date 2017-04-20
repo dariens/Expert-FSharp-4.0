@@ -284,7 +284,7 @@ let joist2 = {Mark = "J2"; TCSize = "4050"}
 let joists = [joist1;joist2]
 
 let json = JsonConvert.SerializeObject(joists, Formatting.Indented)
-printfn "%A" json
+//printfn "%A" json
 
 type testUnion =
     | Car of string
@@ -316,7 +316,7 @@ let formatJson firstObject json =
 let formatedJsonCar = formatJson "TestUnion_List" newJsonCar
 
 let node = JsonConvert.DeserializeXmlNode(formatedJsonCar, "root")
-node.Save(__SOURCE_DIRECTORY__ + "/testXML.xml")
+//node.Save(__SOURCE_DIRECTORY__ + "/testXML.xml")
 
 open System.IO
 
@@ -327,7 +327,7 @@ let readLines (filePath:string) =
         
 
 let xml = readLines (__SOURCE_DIRECTORY__ + "/testXML.xml")
-printfn "%A" xml
+//printfn "%A" xml
 
 
 
@@ -355,8 +355,8 @@ let hcfIntOld = hcfGenericOld (0, (-), (<))
 let hcfInt64Old = hcfGenericOld (0L, (-), (<))
 let hcfBigIntOld = hcfGenericOld (0I, (-), (<))
 
-hcfIntOld 18 12
-hcfBigIntOld 1810287116162232383039576I 1239028178293092830480239032I
+//hcfIntOld 18 12
+//hcfBigIntOld 1810287116162232383039576I 1239028178293092830480239032I
 
 /// Generic Algorithms through Function Parameters
 
@@ -380,7 +380,7 @@ let hcfGeneric (ops : Numeric<'T>) =
 let hcfInt = hcfGeneric intOps
 let hcfBigInt = hcfGeneric bigintOps
 
-hcfInt 18 12
+//hcfInt 18 12
 
 // Interface-type definition
 
@@ -412,7 +412,7 @@ let inline convertToFloatInline x = float x
 
 let inline convertToFloatAndAdd x y = convertToFloatInline x + convertToFloatInline y
 
-convertToFloatAndAdd 1.0 "3"
+//convertToFloatAndAdd 1.0 "3"
 
 /// Understanding Subtyping
 
@@ -452,7 +452,7 @@ let squareStorage storageValue =
     | Float x  -> Some (x * x)
     | Unknown x -> None
 
-storageList |> List.map squareStorage
+//storageList |> List.map squareStorage
 
 /// Knowing When Upcasts Are Aplied Automatically
 
@@ -464,8 +464,8 @@ let dispose (c: IDisposable) = c.Dispose()
 let obj1 = new WebClient()
 let obj2 = new HttpListener()
 
-dispose obj1
-dispose obj2 
+//dispose obj1
+//dispose obj2 
 
 open System
 open System.IO
@@ -475,4 +475,50 @@ let textReader =
     else (File.OpenText("input.txt") :> TextReader)
 
 let getTextReader () : TextReader = (File.OpenText("input.txt") :> TextReader)
+
+/// Flexible Types
+
+open System
+
+let disposeMany (cs : seq<#IDisposable>) =
+    for c in cs do c.Dispose()
+
+/// Troubleshooting Type-Inference Problems
+
+/// Understanding the Value Restriction
+
+
+
+let emptyList = []
+let initialLists = ([], [2])
+let listOfEmptyLists = [[]; []]
+let makeArray () = Array.create 100 []
+
+/// Working around the Value Restriction
+
+// Ensure Generic Functions Have Explicit Arguments
+
+let mapFirst inp = inp |> List.map (fun (x, y)-> x)
+
+let printFstElements inp = inp |> List.map fst |> List.iter (printf "res = %d")
+
+
+// Add a Unit Argument to Create a Generic Function
+
+let empties () = Array.create 100 []
+
+let intEmpties : int list [] = empties ()
+let stringEmpties : int list [] = empties ()
+
+//Add Explicit Type Arguments
+
+let emptyLists<'T> : seq<'T list> = Seq.init 100 (fun _ -> [])
+
+//Seq.length emptyLists
+
+/// Understanding Generic Overloaded Operators
+
+let threeTimes x = (x + x + x)
+let sixTimesInt64 (x: int64) = threeTimes x + threeTimes x
+
 
