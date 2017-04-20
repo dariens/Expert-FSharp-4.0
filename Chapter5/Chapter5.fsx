@@ -334,6 +334,145 @@ printfn "%A" xml
 /// Making Things Generic
 
 
+/// Generic Algorithms through Explicit Arguments
+
+// Non-generic highest common factor
+let rec hcf a b =
+    if a = 0 then b
+    elif a < b then hcf a (b - a)
+    else hcf (a - b) b
+
+// Generic highest common factor
+
+let hcfGenericOld (zero, sub, lessThan) =
+    let rec hcf a b =
+        if a = zero then b
+        elif lessThan a b then hcf a (sub b a)
+        else hcf (sub a b) b
+    hcf
+
+let hcfIntOld = hcfGenericOld (0, (-), (<))
+let hcfInt64Old = hcfGenericOld (0L, (-), (<))
+let hcfBigIntOld = hcfGenericOld (0I, (-), (<))
+
+hcfIntOld 18 12
+hcfBigIntOld 1810287116162232383039576I 1239028178293092830480239032I
+
+/// Generic Algorithms through Function Parameters
+
+// Using concrete record type containing function values
+type Numeric<'T> =
+    {Zero : 'T
+     Subtract : ('T -> 'T -> 'T)
+     LessThan : ('T -> 'T -> bool)}
+
+let intOps = {Zero = 0; Subtract = (-); LessThan = (<)}
+let bigintOps = {Zero = 0I; Subtract = (-); LessThan = (<)}
+let int64Ops = {Zero = 0L; Subtract = (-); LessThan = (<)}
+
+let hcfGeneric (ops : Numeric<'T>) =
+    let rec hcf a b =
+        if a = ops.Zero then b
+        elif ops.LessThan a b then hcf a (ops.Subtract b a)
+        else hcf (ops.Subtract a b) b
+    hcf
+
+let hcfInt = hcfGeneric intOps
+let hcfBigInt = hcfGeneric bigintOps
+
+hcfInt 18 12
+
+// Interface-type definition
+
+type INumeric<'T> =
+    abstract Zero : 'T
+    abstract Subtract : 'T * 'T -> 'T
+    abstract LessThan : 'T * 'T -> bool
+
+let intOpsInterface=
+    {new INumeric<int> with
+        member ops.Zero = 0
+        member ops.Subtract(x, y) = x - y
+        member ops.LessThan(x, y) = x < y}
+
+let hcfGenericInterface (ops : INumeric<'T>) =
+    let rec hcf a b =
+        if a = ops.Zero then b
+        elif ops.LessThan(a, b) then hcf a (ops.Subtract(b, a))
+        else hcf (ops.Subtract(a, b)) b
+    hcf
+
+/// Generic Algorithms through Inlining
+
+[<System.ObsoleteAttribute>]
+let convertToFloat x = float x
 
 
+let inline convertToFloatInline x = float x
+
+let inline convertToFloatAndAdd x y = convertToFloatInline x + convertToFloatInline y
+
+convertToFloatAndAdd 1.0 "3"
+
+/// Understanding Subtyping
+
+/// Casting Up Statically
+
+let xobj = (1 :> obj)
+
+let sobj = ("abc" :> obj)
+
+/// Casting Down Dynamically
+
+let boxedObject = box "abc"
+
+let downcastString = (boxedObject :?> string)
+
+/// Performing Type Tests via Pattern Matching
+
+type storage =
+    | String of string
+    | Int of int
+    | Float of float
+    | Unknown of string option
+
+let checkObject (x: obj) =
+    match x with
+    | :? string as s -> String(s)
+    | :? int as d   -> Int(d)
+    | :? float as f -> Float(f)
+    | _         -> Unknown(None)
+
+let storageList = [checkObject "String"; checkObject 1; checkObject 1.0; checkObject '1']
+
+let squareStorage storageValue =
+    match storageValue with
+    | String x -> None
+    | Int x    -> Some (float x * float x)
+    | Float x  -> Some (x * x)
+    | Unknown x -> None
+
+storageList |> List.map squareStorage
+
+/// Knowing When Upcasts Are Aplied Automatically
+
+open System
+open System.Net
+open System.IO
+let dispose (c: IDisposable) = c.Dispose()
+
+let obj1 = new WebClient()
+let obj2 = new HttpListener()
+
+dispose obj1
+dispose obj2 
+
+open System
+open System.IO
+let textReader =
+    if DateTime.Today.DayOfWeek = DayOfWeek.Monday
+    then Console.In
+    else (File.OpenText("input.txt") :> TextReader)
+
+let getTextReader () : TextReader = (File.OpenText("input.txt") :> TextReader)
 
