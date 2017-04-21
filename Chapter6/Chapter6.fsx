@@ -128,8 +128,69 @@ list ++ 4
 
 /// Using Named and Optional Arguments
 
+open System.Drawing
+
+type LabelInfo(?text : string, ?font : Font) =
+    let text = defaultArg text ""  
+    let font = match font with
+               | None -> new Font(FontFamily.GenericSansSerif, 12.0f)
+               | Some v -> v
+    member x.Text = text
+    member x.Font = font
+
+    static member Create(?text, ?font) = new LabelInfo(?text = text, ?font = font)
+
+LabelInfo (text = "Hello World")
+LabelInfo("Goodbye Lenin")
+LabelInfo.Create()
+LabelInfo(font = new Font(FontFamily.GenericMonospace, 36.0f),
+          text = "Imagine")
 
 
+/// Adding Method Overloading
+
+/// Interval(lo,hi) represents the range of numbers from lo to hi,
+/// but not including either lo or hi.
+
+type Interval(lo, hi) =
+    member r.Lo = lo
+    member r.Hi = hi
+    member r.IsEmpty = hi <= lo
+    member r.Contains v = lo < v && v < hi
+
+    static member Empty = Interval(0.0, 0.0)
+
+    /// Return the smallest interval that covers both the intervals
+    static member Span (r1 : Interval, r2 : Interval) =
+        if r1.IsEmpty then r2 else
+        if r2.IsEmpty then r1 else
+        Interval (min r1.Lo r2.Lo, max r1.Hi r2.Hi)
+
+    /// Return the smallest interval that covers all the intervals
+    static member Span (ranges : seq<Interval>) =
+        Seq.fold (fun r1 r2 -> Interval.Span(r1, r2)) Interval.Empty ranges
+
+let interval1 = Interval(3.0, 6.0)
+let interval2 = Interval(5.0, 9.0)
+let interval3 = Interval (12.0, 14.0)
+let intervalSeq = seq [interval1;interval2;interval3]
+Interval.Span(interval1,interval2)
+Interval.Span(intervalSeq)
+
+type Vector =
+    { DX : float; DY : float}
+    member v.Length = sqrt (v.DX * v.DX + v.DY * v.DY)
+
+type Point =
+    { X : float; Y : float}
+
+    static member (-) (p1 : Point, p2 : Point) =
+        { DX = p1.X - p2.X; DY = p1.Y - p2.Y }
+
+    static member (-) (p : Point, v : Vector) = 
+        { X = p.X - v.DX; Y = p.Y - v.DY }
+
+/// Defining Object Types with Mutable State
 
 
 
