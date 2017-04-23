@@ -29,6 +29,7 @@ let v = {DX = 3.0; DY = 4.0}
 
 v.Length
 
+
 v.Scale(2.0).Length
 
 Vector2DOld.ConstX(3.0)
@@ -192,5 +193,253 @@ type Point =
 
 /// Defining Object Types with Mutable State
 
+type MutableVector2D(dx : float, dy : float) =
+    let mutable currDX = dx
+    let mutable currDY = dy
+
+    member vec.DX with get() = currDX and set v = currDX <- v
+    member vec.DY with get() = currDY and set v = currDY <- v
+
+    member vec.Length
+        with get () = sqrt (currDX * currDX + currDY * currDY)
+        and set len =
+            let theta = vec.Angle
+            currDX <- cos theta * len
+            currDY <- sin theta * len
+
+    member vec.Angle
+        with get () = atan2 currDY currDX
+        and set theta =
+            let len = vec.Length
+            currDX <- cos theta * len
+            currDY <- sin theta * len
+
+let myVector = MutableVector2D(3.0, 4.0)
+
+(myVector.DX, myVector.DY)
+
+(myVector.Length, myVector.Angle)
+
+myVector.Angle <- System.Math.PI / 6.0
+
+(myVector.DX, myVector.DY, myVector.Length)
 
 
+open System.Collections.Generic
+type IntegerMatrix(rows : int, cols : int) =
+    let elems = Array2D.create rows cols None : int option [,]
+    /// This defines an indexer property with getter and setter
+    member t.Item
+        with get (idx1, idx2) = elems.[idx1, idx2]
+        and set (idx1, idx2) v = elems.[idx1, idx2] <- v
+
+let myMatrix = IntegerMatrix(10, 10)
+
+myMatrix.[5, 5] <- (Some 10)
+
+myMatrix.[5,5]
+myMatrix.[9,9]
+
+/// Using Optional Property Settings
+
+open System.Drawing
+open System.Windows.Forms
+type LabelInfoWithPropertySetting() =
+    //let mutable text = "" // the default
+    //let mutable font = new Font(FontFamily.GenericSansSerif, 12.0f)
+    //member x.Text with get() = text and set v = text <- v
+    // member x.Font with get() = font and set v = font <- v
+
+    /// shorthand version with 'Auto-Properties'
+    member val Name = "label"
+    member val Text = "" with get, set
+    member val Font = new Font(FontFamily.GenericSansSerif, 12.0f) with get, set
+
+let labelInfo = LabelInfoWithPropertySetting(Text = "Hello World")
+
+let form = new Form(Visible = true, TopMost = true, Text = "Welcome to F#")
+
+/// Getting Started with Object Interface Types
+
+open System.Drawing
+
+/// Defining New Object Interface Types
+type IShape =
+    abstract Contains : PointF -> bool
+    abstract BoundingBox : RectangleF
+    abstract ShapeInfo : string
+
+
+/// Implementing Object Interface Types Using Object Expressions
+
+// { new IShape with ... }
+// General Form:
+(*
+{ new Type optional-arguments with
+      member-definition
+  optional-extra-interface-definitions }
+*)
+
+let circle (center : PointF, radius : float32) =
+     { new IShape with
+
+         member x.Contains(p : PointF) =
+             let dx = float32 (p.X - center.X)
+             let dy = float32 (p.Y - center.Y)
+             sqrt(dx * dx + dy * dy) <= radius
+             
+         member x.BoundingBox =
+             RectangleF(
+                 center.X - radius, center.Y - radius,
+                 2.0f * radius + 1.0f, 2.0f * radius + 1.0f)
+         member x.ShapeInfo =
+             sprintf "Center: (%f,%f), Radius: %f" center.X center.Y radius 
+                 }
+
+let square (center : PointF, side : float32) =
+    { new IShape with
+
+        member x.Contains(p:PointF) =
+            let dx = p.X - center.X
+            let dy = p.Y - center.Y
+            abs(dx) < side / 2.0f && abs(dy) < side / 2.0f
+
+        member x.BoundingBox =
+            RectangleF(center.X - side, center.Y - side, side * 2.0f, side * 2.0f)
+            
+        member x.ShapeInfo =
+            sprintf "Center: (%f, %f), Side: %f" center.X center.Y side}
+
+let bigCircle = circle(PointF(0.0f, 0.0f), 100.0f)
+bigCircle.BoundingBox
+bigCircle.Contains(PointF(70.0f,70.0f))
+bigCircle.Contains(PointF(71.0f,71.0f))
+
+let smallSquare = square(PointF(1.0f, 1.0f), 1.0f)
+smallSquare.BoundingBox
+smallSquare.Contains(PointF(0.0f, 0.0f))
+
+/// IMplementing Object Interface Types Using Concrete Types
+
+type Area =
+        | Area of float32
+
+type MutableCircle(center: PointF, radius: float32) =
+    
+    member val Center = center with get, set
+    member val Radius = radius with get, set
+
+    member c.Perimeter = 2.0 * System.Math.PI * float c.Radius
+
+    static member private ZeroOrigin = new PointF(0.0f, 0.0f)
+
+    interface IShape with
+
+        member c.Contains(p : PointF) =
+            let dx = p.X - c.Center.X
+            let dy = float32 (p.Y - c.Center.Y)
+            sqrt(dx * dx + dy * dy) <= float32 c.Radius
+
+        member c.BoundingBox =
+            RectangleF(
+                c.Center.X - c.Radius, c.Center.Y - c.Radius,
+                2.0f * c.Radius + 1.0f, 2.0f * c.Radius + 1.0f)
+
+        member c.ShapeInfo =
+            sprintf "Center: (%f,%f), Radius: %f" center.X center.Y radius 
+
+    new(a : float32,center : PointF) =      
+        let radius = sqrt((float32 a)/(float32 System.Math.PI))
+        MutableCircle(center, radius)     
+
+    new(area : Area) =
+        match area with
+        | Area a ->
+            let radius = sqrt((float32 a)/(float32 System.Math.PI))
+            MutableCircle(MutableCircle.ZeroOrigin, radius)
+
+    new(radius : float32) =
+        MutableCircle(MutableCircle.ZeroOrigin, radius)
+
+    new() =
+        MutableCircle(MutableCircle.ZeroOrigin, 10.0f)
+
+
+let circle2 = MutableCircle()
+circle2.Radius
+(circle2 :> IShape).BoundingBox
+
+let r1 = square(new PointF(1.0f, 1.0f), 2.0f) 
+let c1 = new MutableCircle() :> IShape
+let c2 = new MutableCircle(new PointF(3.0f, 3.0f), radius = 4.0f) :> IShape
+let c3 = new MutableCircle(Area(4.0f)) :> IShape
+let c4 = new MutableCircle(radius = 4.0f) :> IShape
+
+let printShapeInfo (c:IShape) = printfn "%s" c.ShapeInfo
+
+[r1;c1;c2;c3;c4] |> List.map printShapeInfo
+
+///Using Common Object Interface Types from the .Net Libraries
+
+type IEnumerator<'T> =
+    abstract Current : 'T
+    abstract MoveNext : unit -> bool
+
+type IEnumerable<'T> =
+    abstract GetEnumerator : unit -> IEnumerator<'T>
+
+/// Understanding Hierarchies of Object Interface Types
+
+type ICollection<'T> =
+    inherit IEnumerable<'T>
+    abstract Count : int
+    abstract isReadOnly : bool
+    abstract Add : 'T -> unit
+    abstract Clear : unit -> unit
+    abstract Contains : 'T -> bool
+    abstract CopyTo : 'T [] * int -> unit
+    abstract Remove : 'T -> unit
+
+/// More Techniques for Implementing Objects
+
+/// Combining Object Expressions and Function Parameters
+
+/// An object interface type that consumes characters and strings
+type ITextOutputSink =
+   /// When implemented, writes one Unicode character to the sink
+   abstract WriteChar : char -> unit
+
+   /// When implemennted, writes one Unicode string to the sink
+   abstract WriteString : string -> unit
+
+/// Returns an object that implements ITextOutputSink by using writeCharFunction
+let simpleOutputSink writeCharFunction =
+    { new ITextOutputSink with
+        member x.WriteChar(c) = writeCharFunction c
+        member x.WriteString(s) = s |> String.iter x.WriteChar}
+
+let stringBuilderOutputSink(buf : System.Text.StringBuilder ) =
+    simpleOutputSink (fun c -> buf.Append(c) |> ignore)
+
+/// Implementation
+open System.Text
+
+let buf = new StringBuilder()
+let c = stringBuilderOutputSink(buf)
+
+buf.ToString()
+["Incy"; " "; "Wincy"; " "; "Spider"] |> List.iter c.WriteString
+buf.ToString()
+
+[';';' '; 'D';'o';'n';'e'] |> List.iter c.WriteChar
+buf.ToString()
+
+/// A type that fully implements the ITextOutputSink object interface
+type CountingOutputSink(writeCharFunction : char -> unit) =
+    let mutable count = 0
+    interface ITextOutputSink with
+        member x.WriteChar(c) = count <- count + 1; writeCharFunction(c)
+        member x.WriteString(s) = s |> String.iter (x :> ITextOutputSink).WriteChar
+    member x.Count = count
+
+/// Defining Partially Implement Class Types
