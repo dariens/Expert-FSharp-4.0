@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doc>
+<assembly><name>WeeklyWorkbookAnalysis</name></assembly>
+<members>
+<member name="T:ReportAnalysis.DsmReportAnalysis.FeedbackLine">
+<summary>
+ Get a FileInfo [] containing the reports in the &apos;Weekly Sales Report&apos; folder
+</summary>
+</member>
+<member name="M:ReportAnalysis.DsmReportAnalysis.getJoistFeedback(Microsoft.Office.Interop.Excel.Worksheet)">
+<summary>
+ Get Joist FB Info
+</summary>
+</member>
+<member name="M:ReportAnalysis.DsmReportAnalysis.pullInfoFromReport(Microsoft.FSharp.Collections.FSharpList{Microsoft.FSharp.Core.FSharpFunc{Microsoft.Office.Interop.Excel.Workbook,ReportAnalysis.DsmReportAnalysis.InfoReturnTypes}},Microsoft.Office.Interop.Excel.Application,System.String)">
+<summary>
+ Function that pulls info from one of the reports. The &apos;pullInfoFunction&apos; will determine what info is taken from the report 
+</summary>
+</member>
+</members>
+</doc>
