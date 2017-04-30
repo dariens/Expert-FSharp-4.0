@@ -20,3 +20,25 @@ U:\CODE\F#\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\obj\Debug\WeeklyWorkboo
 U:\CODE\F#\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Deedle.dll
 U:\CODE\F#\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Deedle.pdb
 U:\CODE\F#\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Deedle.xml
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\WeeklyWorkbookAnalysis.XML
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\obj\Debug\WeeklyWorkbookAnalysis.fsproj.WeeklyWorkbookAnalysis.exe.config
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\obj\Debug\WeeklyWorkbookAnalysis.exe
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\obj\Debug\WeeklyWorkbookAnalysis.pdb
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\WeeklyWorkbookAnalysis.exe.config
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\WeeklyWorkbookAnalysis.exe
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\WeeklyWorkbookAnalysis.pdb
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Deedle.dll
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\FSharp.Core.dll
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Microsoft.Office.Interop.Excel.dll
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Newtonsoft.Json.dll
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\office.dll
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\XPlot.Plotly.dll
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Microsoft.Vbe.Interop.dll
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\stdole.dll
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Deedle.pdb
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Deedle.xml
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Microsoft.Office.Interop.Excel.xml
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\FSharp.Core.xml
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Newtonsoft.Json.xml
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\office.xml
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\XPlot.Plotly.xml

@@ -248,6 +248,7 @@ module Deedleing =
     //#r "../packages/Deedle.1.2.5/lib/net40/Deedle.dll"
 
     open Deedle
+    open System
 
     module Frame =
         let whereRowValuesInColMeetReq colIndex req frame =
@@ -260,6 +261,16 @@ module Deedleing =
             //Frame.filterRowValues (fun (objSeries : ObjectSeries<'a>) -> 
             //        (Seq.contains (objSeries.Get(colIndex)) acceptableValues)) frame
 
+        let whereRowValuesInColDontEqual colIndex unacceptableValues frame =
+            frame
+            |> whereRowValuesInColMeetReq colIndex (fun obj -> (Seq.contains obj unacceptableValues) = false)
+
+        let whereRowValuesInColAreInDateRange colIndex startDate endDate frame =
+            frame
+            |> whereRowValuesInColMeetReq colIndex (fun date ->
+                                                        let date = System.DateTime.Parse(string date)
+                                                        date >= startDate && date <= endDate)
+
         let removeDuplicateRows index (df : Frame<'a, 'b>) =
           let unique = Seq.distinctBy (fun (a, b) -> a) (df.GroupRowsBy(index).RowKeys)
           let nonDupKeys = 
@@ -267,8 +278,9 @@ module Deedleing =
                   let value, key = tup
                   yield key]
           df.Rows.[nonDupKeys]
-
-        let merge_On (initialFrame : Frame<'a,'b>) (infoFrame : Frame<'c, 'b>) index =
+        
+        
+        let merge_On (infoFrame : Frame<'c, 'b>) index missingReplacement (initialFrame : Frame<'a,'b>) =
               let newFrame = initialFrame.Clone()
               let newInfoFrame = infoFrame.Clone()
                                |> removeDuplicateRows index 
@@ -277,28 +289,135 @@ module Deedleing =
               for colKey in newInfoFrame.ColumnKeys do
                   let newSeries =
                       [for f in initialSeries.ValuesAll do
-                            let key = newInfoFrame.GetRow(f)
-                            let newValue = key.[colKey]
-                            yield newValue]
+                            if Seq.contains f newInfoFrame.RowKeys then  
+                                let key = newInfoFrame.GetRow(f)
+                                let newValue = key.[colKey]
+                                yield newValue
+                            else
+                                let newValue = box missingReplacement
+                                yield newValue]
                   newFrame.AddColumn(colKey, newSeries)
-              newFrame 
- 
+              newFrame
 
-    //let myFrame = Frame.ReadCsv("U:\CODE\F#\Expert-FSharp-4.0\SalesByCustomer\Data\Fallon\Jobs Sold.csv")
-    let myFrame = Frame.ReadCsv("C:\Users\user\Documents\CODE\F#\Expert F# 4.0\SalesByCustomer\Data\Fallon\Jobs Sold.csv")
+        
 
-    let newFrame = myFrame
-                       |> Frame.whereRowValuesInColEqual "takeoffperson" ["Darien Shannon"]
-                      // |> Frame.whereRowValuesInColEqual "salesperson" ["Chris Cline"]
-                      // |> Frame.whereRowValuesInColMeetReq "Total Tons" (fun x -> System.Convert.ToDouble(x) > 40.0)
-    let newFrame2 = myFrame.GroupRowsBy("takeoffperson") :Frame<(string*_), _>
-    newFrame2.Format()
-    newFrame2.RowKeys
+        let sumColumnsBy colIndex (frame: Frame<'a, 'b>) =
+                let distinctValues = frame.GetColumn(colIndex).Values |> Seq.distinct
+                let mutable row = -1
+                let seriesList =
+                  [for distinctValue in distinctValues do
+                    let sumOfDistinctValue = frame
+                                             |> whereRowValuesInColEqual colIndex [distinctValue]
+                                             |> Frame.dropCol colIndex
+                                             |> Stats.sum
+                                             
+                    for key in sumOfDistinctValue.Keys do
+                         row <- row + 1
+                         yield (box row, key, sumOfDistinctValue.[key])]
+                let newFrame = seriesList |> Frame.ofValues
+                newFrame.AddColumn(colIndex, distinctValues)
+                newFrame
+                
 
-    newFrame.Columns.[["Job Name";"Total Tons";"Profit"]].Sum().Format()
-    newFrame.Format()
+
+        let sumSpecificColumnsBy byColumn (wantedColumns) (frame: Frame<'a, 'b>) =
+            let allColumns = byColumn :: wantedColumns
+            let newFrame = frame.Columns.[allColumns]
+            let summedFrame = newFrame |> sumColumnsBy byColumn
+            summedFrame
 
 
+    let createReport startDate endDate =
+        let quotedVsSold = Frame.ReadCsv(@"..\..\..\Data\Fallon\Quoted Vs Sold.csv")
+        let jobsSold = Frame.ReadCsv(@"..\..\..\Data\Fallon\Jobs Sold.csv")
+        let jobsQuoted = Frame.ReadCsv(@"..\..\..\Data\Fallon\Jobs Quoted.csv")               
+    
+        let filteredJobsQuoted = 
+             let initialFilter = jobsQuoted
+                                 |> Frame.whereRowValuesInColAreInDateRange "Date Quoted" startDate endDate
+             initialFilter.RenameColumn("Total Tons", "Quoted Tons (From 'Jobs Quoted')")
+             initialFilter.Columns.[["Job Number"; "Quoted Tons (From 'Jobs Quoted')"]]
+
+        let mergedQuotedVsSoldWithJobsQuoted = 
+            let mergedFrame = Frame.merge_On filteredJobsQuoted "Job Number" 0.0 quotedVsSold
+            mergedFrame.Columns.[["Job Number"; "Customer"; "J.Tons(Base)";"Quoted Tons (From 'Jobs Quoted')"]] |> ignore
+            mergedFrame.RenameColumn("J.Tons(Base)", "Quoted Tons (From 'Quoted Vs. Sold')")
+            mergedFrame |> Frame.sumSpecificColumnsBy "Customer" ["Quoted Tons (From 'Jobs Quoted')"]
+
+        let mergedQuotedVsSoldWithJobsQuoted2 = 
+            let mergedFrame = Frame.merge_On filteredJobsQuoted "Job Number" 0.0 quotedVsSold
+            let mergedFrame = mergedFrame.Columns.[["Job Number"; "Customer"; "J.Tons(Base)";"Quoted Tons (From 'Jobs Quoted')"]]
+            mergedFrame.RenameColumn("J.Tons(Base)", "Quoted Tons (From 'Quoted Vs. Sold')")
+            mergedFrame |> Frame.sumSpecificColumnsBy "Customer" ["Quoted Tons (From 'Quoted Vs. Sold')"]
+
+        let soldByCustomer = 
+            let jobsSold = jobsSold
+                           |> Frame.whereRowValuesInColAreInDateRange "J. PO Date" startDate endDate
+                           |> Frame.sumSpecificColumnsBy "Customer" ["Total Tons"]
+            jobsSold.RenameColumn("Total Tons", "Sold Tons")
+            jobsSold
+     
+        let soldJobNumbers = jobsSold.GetColumn<obj>("Job Number").ValuesAll
+        let jobsQuotedAndSold = 
+            let df = quotedVsSold
+                     |> Frame.whereRowValuesInColDontEqual "Job Number" soldJobNumbers
+            let wantedPortion = df.Columns.[["Customer"; "J.Tons(Base)"]]
+            wantedPortion.RenameColumn("J.Tons(Base)", "Quoted Tons That We Sold (From 'Quoted Vs. Sold')")
+            wantedPortion |> Frame.sumColumnsBy "Customer"
+
+        let filteredJobsQuotedAndSold = 
+             let initialFilter = jobsQuoted
+                                 |> Frame.whereRowValuesInColAreInDateRange "Date Quoted" startDate endDate
+                                 |> Frame.whereRowValuesInColEqual "Job Number" soldJobNumbers
+             initialFilter.RenameColumn("Total Tons", "Quoted Tons That We Sold (From 'Jobs Quoted')")
+             initialFilter.Columns.[["Job Number"; "Quoted Tons That We Sold (From 'Jobs Quoted')"]]
+         
+        let mergedQuotedVsSoldWithJobsQuoted3 = 
+            let mergedFrame = Frame.merge_On filteredJobsQuotedAndSold "Job Number" 0.0 quotedVsSold
+            mergedFrame.Columns.[["Job Number"; "Customer"; "J.Tons(Base)";"Quoted Tons That We Sold (From 'Jobs Quoted')"]]
+            |> Frame.sumSpecificColumnsBy "Customer" ["Quoted Tons That We Sold (From 'Jobs Quoted')"]
 
 
+        let customerAnalysis =
+            let newFrame =
+                mergedQuotedVsSoldWithJobsQuoted
+                |> Frame.merge_On mergedQuotedVsSoldWithJobsQuoted2 "Customer" 0.0 
+                |> Frame.merge_On soldByCustomer "Customer" 0.0
+                |> Frame.merge_On jobsQuotedAndSold "Customer" 0.0
+                |> Frame.merge_On mergedQuotedVsSoldWithJobsQuoted3 "Customer" 0.0
 
+            newFrame.AddColumn("Quoted Tons That We Sold To Others (From 'Jobs Quoted')",
+                seq [ for v in newFrame.RowKeys do
+                        let quoted = newFrame.Rows.[v].["Quoted Tons That We Sold (From 'Jobs Quoted')"]
+                        let sold = newFrame.Rows.[v].["Sold Tons"]
+                        yield (quoted :?> float) - (sold :?> float)])
+
+            newFrame.AddColumn("Quoted Tons That We Sold To Others (From 'Quoted Vs. Sold')",
+                seq [ for v in newFrame.RowKeys do
+                        let quoted = newFrame.Rows.[v].["Quoted Tons That We Sold (From 'Quoted Vs. Sold')"]
+                        let sold = newFrame.Rows.[v].["Sold Tons"]
+                        yield (quoted :?> float) - (sold :?> float)])
+
+            newFrame.AddColumn("Sold Percentage (From 'Jobs Quoted')",
+                seq [ for v in newFrame.RowKeys do
+                        let quoted = newFrame.Rows.[v].["Quoted Tons That We Sold (From 'Jobs Quoted')"]
+                        let sold = newFrame.Rows.[v].["Sold Tons"]
+                        if (quoted :?> float) <> 0.0 then
+                            yield (sold :?> float) / (quoted :?> float)
+                        else
+                            yield 0.0])
+
+            newFrame.Columns.[["Customer";
+                               "Sold Tons";
+                               "Quoted Tons (From 'Jobs Quoted')";
+                               //"Quoted Tons That We Sold To Others (From 'Jobs Quoted')";
+                               //"Quoted Tons That We Sold (From 'Jobs Quoted')";
+                               "Quoted Tons (From 'Quoted Vs. Sold')";
+                               "Sold Percentage (From 'Jobs Quoted')"]]
+                               //"Quoted Tons That We Sold To Others (From 'Quoted Vs. Sold')";
+                               //"Quoted Tons That We Sold (From 'Quoted Vs. Sold')"]]
+
+        customerAnalysis.SaveCsv( @"..\..\..\Output\Fallon\Customer Analysis" +
+                                  System.DateTime.Now.ToString("MM_dd_yyy_HH_mm") + ".csv")
+
+        printfn "%A" "ALL FINISHED!"
