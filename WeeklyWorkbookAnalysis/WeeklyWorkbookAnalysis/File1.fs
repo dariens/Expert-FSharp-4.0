@@ -306,13 +306,13 @@ module Deedleing =
                 let mutable row = -1
                 let seriesList =
                   [for distinctValue in distinctValues do
+                    row <- row + 1
                     let sumOfDistinctValue = frame
                                              |> whereRowValuesInColEqual colIndex [distinctValue]
                                              |> Frame.dropCol colIndex
                                              |> Stats.sum
                                              
-                    for key in sumOfDistinctValue.Keys do
-                         row <- row + 1
+                    for key in sumOfDistinctValue.Keys do                   
                          yield (box row, key, sumOfDistinctValue.[key])]
                 let newFrame = seriesList |> Frame.ofValues
                 newFrame.AddColumn(colIndex, distinctValues)
@@ -421,3 +421,28 @@ module Deedleing =
                                   System.DateTime.Now.ToString("MM_dd_yyy_HH_mm") + ".csv")
 
         printfn "%A" "ALL FINISHED!"
+
+    let test () =
+        let data =
+                [(0, "Name", box "Darien");
+                 (0, "Col 2", box 30);
+                 (0, "Col 3", box 40);
+                 (1, "Name", box "Niko");
+                 (1, "Col 2", box 6);
+                 (1, "Col 3", box 7);
+                 (2, "Name", box "Nedelee");
+                 (2, "Col 2", box 150);
+                 (2, "Col 3", box 160);
+                 (3, "Name", box "Darien");
+                 (3, "Col 2", box 30);
+                 (3, "Col 3", box 40);
+                 (4, "Name", box "Niko");
+                 (4, "Col 2", box 6);
+                 (4, "Col 3", box 7);
+                 (5, "Name", box "Nedelee");
+                 (5, "Col 2", box 150);
+                 (5, "Col 3", box 160)] |> Frame.ofValues |> Frame.sumSpecificColumnsBy "Name" ["Col 2"] 
+        
+        printfn "%A" (data.Format())
+
+         

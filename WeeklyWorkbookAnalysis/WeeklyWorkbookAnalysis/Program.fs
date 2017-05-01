@@ -10,6 +10,7 @@ let main argv =
     //SendFeedbackToExcel ()
     //MyPlot ()
     //printfn "%s" "COMPLETE!"
-    createReport (System.DateTime(2017, 1, 1)) System.DateTime.Now
+    test ()
+    //createReport (System.DateTime(2017, 1, 1)) System.DateTime.Now
     let s = System.Console.ReadLine()
     0 // return an integer exit code
