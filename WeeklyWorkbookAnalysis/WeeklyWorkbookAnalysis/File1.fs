@@ -490,6 +490,38 @@ module Deedleing =
                 |> Frame.sortRows "TakeoffPerson"
                 |> Frame.renameColumn "Job Number" "# Takeoffs"
 
+            let soldJobsCount =
+                jobsSold
+                |> Frame.addCol "Week"
+                    (jobsSold.GetColumn("Date Quoted")
+                     |> Series.mapValues (fun value -> 
+                                             System.Globalization.GregorianCalendar().GetWeekOfYear(
+                                              System.DateTime.Parse(value),
+                                              System.Globalization.CalendarWeekRule.FirstDay,
+                                              System.DayOfWeek.Sunday)))
+                |> Frame.addCol "Year"
+                    (jobsQuoted.GetColumn("Date Quoted")
+                    |> Series.mapValues (fun value -> System.DateTime.Parse(value).Year))
+                |> Frame.aggregateRowsBy (seq ["TakeoffPerson"; "Year"; "Week"]) (seq ["Job Number"]) Stats.count
+                |> Frame.sortRows "TakeoffPerson"
+                |> Frame.renameColumn "Job Number" "# Takeoffs"
+           
+            let soldTons =
+                jobsSold
+                |> Frame.addCol "Week"
+                    (jobsSold.GetColumn("Date Quoted")
+                     |> Series.mapValues (fun value -> 
+                                             System.Globalization.GregorianCalendar().GetWeekOfYear(
+                                              System.DateTime.Parse(value),
+                                              System.Globalization.CalendarWeekRule.FirstDay,
+                                              System.DayOfWeek.Sunday)))
+                |> Frame.addCol "Year"
+                    (jobsQuoted.GetColumn("Date Quoted")
+                    |> Series.mapValues (fun value -> System.DateTime.Parse(value).Year))
+                |> Frame.aggregateRowsBy (seq ["TakeoffPerson"; "Year"; "Week"]) (seq ["Total Tons"]) Stats.sum
+                |> Frame.sortRows "TakeoffPerson"
+                |> Frame.renameColumn "Job Number" "# Takeoffs"
+
             takeoffCount.SaveCsv(@"Output\Estimator Takeoff Count.csv")
             totalTons.SaveCsv(@"Output\Estimator Total Tons.csv")
         printfn "%s" "All Finished"
