@@ -336,6 +336,7 @@ module Deedleing =
     let createDsmReport startDate endDate dsm =
         //let startDate = System.DateTime(2017,1,1)
         //let endDate = System.DateTime.Now
+        //#r "../packages/Deedle.1.2.5/lib/net40/Deedle.dll"
         //Environment.CurrentDirectory <- @"U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug"
         
         let quotedVsSold = 
@@ -358,12 +359,15 @@ module Deedleing =
             |> Frame.merge_On filteredJobsQuoted "Job Number" 0.0
             |> Frame.getSpecificColumns ["Job Number"; "Customer"; "J.Tons(Base)";"Quoted Tons (From 'Jobs Quoted')"]
             |> Frame.renameColumn "J.Tons(Base)" "Quoted Tons (From 'Quoted Vs. Sold')"
-            |> Frame.sumSpecificColumnsBy "Customer" ["Quoted Tons (From 'Jobs Quoted')";"Quoted Tons (From 'Quoted Vs. Sold')"]
+            |> Frame.aggregateRowsBy 
+                (seq ["Customer"])
+                (seq ["Quoted Tons (From 'Jobs Quoted')";"Quoted Tons (From 'Quoted Vs. Sold')"])
+                Stats.sum
 
         let soldByCustomer = 
             jobsSold
             |> Frame.whereRowValuesInColAreInDateRange "J. PO Date" startDate endDate
-            |> Frame.sumSpecificColumnsBy "Customer" ["Total Tons"]
+            |> Frame.aggregateRowsBy (seq ["Customer"]) (seq ["Total Tons"]) Stats.sum
             |> Frame.renameColumn "Total Tons" "Sold Tons"
 
      
@@ -374,7 +378,10 @@ module Deedleing =
             |> Frame.whereRowValuesInColDontEqual "Job Number" soldJobNumbers
             |> Frame.getSpecificColumns ["Customer"; "J.Tons(Base)"]
             |> Frame.renameColumn "J.Tons(Base)" "Quoted Tons That We Sold (From 'Quoted Vs. Sold')"
-            |> Frame.sumColumnsBy "Customer"
+            |> Frame.aggregateRowsBy
+                (seq ["Customer"])
+                (quotedVsSold.Columns.Keys)
+                Stats.sum
 
         let filteredJobsQuotedAndSold = 
              jobsQuoted
@@ -388,7 +395,10 @@ module Deedleing =
             quotedVsSold
             |> Frame.merge_On filteredJobsQuotedAndSold "Job Number" 0.0
             |> Frame.getSpecificColumns ["Job Number"; "Customer"; "J.Tons(Base)";"Quoted Tons That We Sold (From 'Jobs Quoted')"]
-            |> Frame.sumSpecificColumnsBy "Customer" ["Quoted Tons That We Sold (From 'Jobs Quoted')"]
+            |> Frame.aggregateRowsBy
+                (seq ["Customer"])
+                (seq ["Quoted Tons That We Sold (From 'Jobs Quoted')"])
+                Stats.sum
 
 
         let customerAnalysis =
@@ -437,8 +447,52 @@ module Deedleing =
         for dsm in dsms do
             createDsmReport startDate endDate dsm
         printfn "%A" "All Finshed!"
+ 
+    let createEstimatorReport () =
+        //#r "../packages/Deedle.1.2.5/lib/net40/Deedle.dll"
+        //Environment.CurrentDirectory <- @"C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug"
+        //open Deedle
+        //open System
 
-        
+        let jobsSold = Frame.ReadCsv(@"Data\Jobs Sold.csv")
+        let jobsQuoted = Frame.ReadCsv(@"Data\Jobs Quoted.csv")
+        let calander = new System.Globalization.GregorianCalendar()
+        let jobsQuotedCount =
+            let takeoffCount =
+                jobsQuoted
+                |> Frame.addCol "Week"
+                    (jobsQuoted.GetColumn("Date Quoted")
+                     |> Series.mapValues (fun value -> 
+                                             System.Globalization.GregorianCalendar().GetWeekOfYear(
+                                              System.DateTime.Parse(value),
+                                              System.Globalization.CalendarWeekRule.FirstDay,
+                                              System.DayOfWeek.Sunday)))
+                |> Frame.addCol "Year"
+                    (jobsQuoted.GetColumn("Date Quoted")
+                    |> Series.mapValues (fun value -> System.DateTime.Parse(value).Year))
+                |> Frame.aggregateRowsBy (seq ["TakeoffPerson"; "Year"; "Week"]) (seq ["Job Number"]) Stats.count
+                |> Frame.sortRows "TakeoffPerson"
+                |> Frame.renameColumn "Job Number" "# Takeoffs"
+           
+            let totalTons =
+                jobsQuoted
+                |> Frame.addCol "Week"
+                    (jobsQuoted.GetColumn("Date Quoted")
+                     |> Series.mapValues (fun value -> 
+                                             System.Globalization.GregorianCalendar().GetWeekOfYear(
+                                              System.DateTime.Parse(value),
+                                              System.Globalization.CalendarWeekRule.FirstDay,
+                                              System.DayOfWeek.Sunday)))
+                |> Frame.addCol "Year"
+                    (jobsQuoted.GetColumn("Date Quoted")
+                    |> Series.mapValues (fun value -> System.DateTime.Parse(value).Year))
+                |> Frame.aggregateRowsBy (seq ["TakeoffPerson"; "Year"; "Week"]) (seq ["Total Tons"]) Stats.sum
+                |> Frame.sortRows "TakeoffPerson"
+                |> Frame.renameColumn "Job Number" "# Takeoffs"
+
+            takeoffCount.SaveCsv(@"Output\Estimator Takeoff Count.csv")
+            totalTons.SaveCsv(@"Output\Estimator Total Tons.csv")
+        printfn "%s" "All Finished"
 
 
     let test () =
