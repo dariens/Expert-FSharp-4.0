@@ -42,3 +42,25 @@ C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkb
 C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Newtonsoft.Json.xml
 C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\office.xml
 C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\XPlot.Plotly.xml
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\WeeklyWorkbookAnalysis.exe.config
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\WeeklyWorkbookAnalysis.XML
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\WeeklyWorkbookAnalysis.exe
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\WeeklyWorkbookAnalysis.pdb
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Deedle.dll
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\FSharp.Core.dll
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Microsoft.Office.Interop.Excel.dll
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Newtonsoft.Json.dll
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\office.dll
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\XPlot.Plotly.dll
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Microsoft.Vbe.Interop.dll
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\stdole.dll
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Deedle.pdb
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Deedle.xml
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Microsoft.Office.Interop.Excel.xml
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\FSharp.Core.xml
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Newtonsoft.Json.xml
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\office.xml
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\XPlot.Plotly.xml
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\obj\Debug\WeeklyWorkbookAnalysis.fsproj.WeeklyWorkbookAnalysis.exe.config
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\obj\Debug\WeeklyWorkbookAnalysis.exe
+U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\obj\Debug\WeeklyWorkbookAnalysis.pdb

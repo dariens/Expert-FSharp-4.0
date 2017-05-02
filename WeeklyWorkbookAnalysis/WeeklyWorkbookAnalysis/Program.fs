@@ -10,7 +10,7 @@ let main argv =
     //SendFeedbackToExcel ()
     //MyPlot ()
     //printfn "%s" "COMPLETE!"
-    test ()
-    //createReport (System.DateTime(2017, 1, 1)) System.DateTime.Now
+    //test ()
+    createDsmReports (System.DateTime(2017, 1, 1)) System.DateTime.Now ["";"Martha Leon"; "Chris Cline"; "Bob Stearns"; "John Degidio"; "Johnny Martinez"]
     let s = System.Console.ReadLine()
     0 // return an integer exit code

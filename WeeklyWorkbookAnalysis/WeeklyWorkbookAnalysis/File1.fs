@@ -326,62 +326,74 @@ module Deedleing =
             let summedFrame = newFrame |> sumColumnsBy byColumn
             summedFrame
 
+        let getSpecificColumns (columns: 'b list) (frame: Frame<'a, 'b>) =
+            frame.Columns.[columns]
 
-    let createReport startDate endDate =
-        let quotedVsSold = Frame.ReadCsv(@"..\..\..\Data\Fallon\Quoted Vs Sold.csv")
-        let jobsSold = Frame.ReadCsv(@"..\..\..\Data\Fallon\Jobs Sold.csv")
-        let jobsQuoted = Frame.ReadCsv(@"..\..\..\Data\Fallon\Jobs Quoted.csv")               
+        let renameColumn initialName finalName (frame: Frame<'a, 'b>) =
+            frame.RenameColumn(initialName, finalName)
+            frame
+
+    let createDsmReport startDate endDate dsm =
+        //let startDate = System.DateTime(2017,1,1)
+        //let endDate = System.DateTime.Now
+        //Environment.CurrentDirectory <- @"U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug"
+        
+        let quotedVsSold = 
+            match dsm with
+            | "" -> Frame.ReadCsv(@"Data\Quoted Vs Sold.csv")
+            | dsm -> Frame.ReadCsv(@"Data\Quoted Vs Sold.csv")
+                     |> Frame.whereRowValuesInColEqual "Quote DSM" [dsm]
+
+        let jobsSold = Frame.ReadCsv(@"Data\Jobs Sold.csv")
+        let jobsQuoted = Frame.ReadCsv(@"Data\Jobs Quoted.csv")               
     
         let filteredJobsQuoted = 
-             let initialFilter = jobsQuoted
-                                 |> Frame.whereRowValuesInColAreInDateRange "Date Quoted" startDate endDate
-             initialFilter.RenameColumn("Total Tons", "Quoted Tons (From 'Jobs Quoted')")
-             initialFilter.Columns.[["Job Number"; "Quoted Tons (From 'Jobs Quoted')"]]
-
+            jobsQuoted
+            |> Frame.whereRowValuesInColAreInDateRange "Date Quoted" startDate endDate
+            |> Frame.getSpecificColumns ["Job Number"; "Total Tons"]
+            |> Frame.renameColumn "Total Tons" "Quoted Tons (From 'Jobs Quoted')"
+             
         let mergedQuotedVsSoldWithJobsQuoted = 
-            let mergedFrame = Frame.merge_On filteredJobsQuoted "Job Number" 0.0 quotedVsSold
-            mergedFrame.Columns.[["Job Number"; "Customer"; "J.Tons(Base)";"Quoted Tons (From 'Jobs Quoted')"]] |> ignore
-            mergedFrame.RenameColumn("J.Tons(Base)", "Quoted Tons (From 'Quoted Vs. Sold')")
-            mergedFrame |> Frame.sumSpecificColumnsBy "Customer" ["Quoted Tons (From 'Jobs Quoted')"]
-
-        let mergedQuotedVsSoldWithJobsQuoted2 = 
-            let mergedFrame = Frame.merge_On filteredJobsQuoted "Job Number" 0.0 quotedVsSold
-            let mergedFrame = mergedFrame.Columns.[["Job Number"; "Customer"; "J.Tons(Base)";"Quoted Tons (From 'Jobs Quoted')"]]
-            mergedFrame.RenameColumn("J.Tons(Base)", "Quoted Tons (From 'Quoted Vs. Sold')")
-            mergedFrame |> Frame.sumSpecificColumnsBy "Customer" ["Quoted Tons (From 'Quoted Vs. Sold')"]
+            quotedVsSold
+            |> Frame.merge_On filteredJobsQuoted "Job Number" 0.0
+            |> Frame.getSpecificColumns ["Job Number"; "Customer"; "J.Tons(Base)";"Quoted Tons (From 'Jobs Quoted')"]
+            |> Frame.renameColumn "J.Tons(Base)" "Quoted Tons (From 'Quoted Vs. Sold')"
+            |> Frame.sumSpecificColumnsBy "Customer" ["Quoted Tons (From 'Jobs Quoted')";"Quoted Tons (From 'Quoted Vs. Sold')"]
 
         let soldByCustomer = 
-            let jobsSold = jobsSold
-                           |> Frame.whereRowValuesInColAreInDateRange "J. PO Date" startDate endDate
-                           |> Frame.sumSpecificColumnsBy "Customer" ["Total Tons"]
-            jobsSold.RenameColumn("Total Tons", "Sold Tons")
             jobsSold
+            |> Frame.whereRowValuesInColAreInDateRange "J. PO Date" startDate endDate
+            |> Frame.sumSpecificColumnsBy "Customer" ["Total Tons"]
+            |> Frame.renameColumn "Total Tons" "Sold Tons"
+
      
         let soldJobNumbers = jobsSold.GetColumn<obj>("Job Number").ValuesAll
+        
         let jobsQuotedAndSold = 
-            let df = quotedVsSold
-                     |> Frame.whereRowValuesInColDontEqual "Job Number" soldJobNumbers
-            let wantedPortion = df.Columns.[["Customer"; "J.Tons(Base)"]]
-            wantedPortion.RenameColumn("J.Tons(Base)", "Quoted Tons That We Sold (From 'Quoted Vs. Sold')")
-            wantedPortion |> Frame.sumColumnsBy "Customer"
+            quotedVsSold
+            |> Frame.whereRowValuesInColDontEqual "Job Number" soldJobNumbers
+            |> Frame.getSpecificColumns ["Customer"; "J.Tons(Base)"]
+            |> Frame.renameColumn "J.Tons(Base)" "Quoted Tons That We Sold (From 'Quoted Vs. Sold')"
+            |> Frame.sumColumnsBy "Customer"
 
         let filteredJobsQuotedAndSold = 
-             let initialFilter = jobsQuoted
-                                 |> Frame.whereRowValuesInColAreInDateRange "Date Quoted" startDate endDate
-                                 |> Frame.whereRowValuesInColEqual "Job Number" soldJobNumbers
-             initialFilter.RenameColumn("Total Tons", "Quoted Tons That We Sold (From 'Jobs Quoted')")
-             initialFilter.Columns.[["Job Number"; "Quoted Tons That We Sold (From 'Jobs Quoted')"]]
+             jobsQuoted
+             |> Frame.whereRowValuesInColAreInDateRange "Date Quoted" startDate endDate
+             |> Frame.whereRowValuesInColEqual "Job Number" soldJobNumbers
+             |> Frame.renameColumn "Total Tons" "Quoted Tons That We Sold (From 'Jobs Quoted')"
+             |> Frame.getSpecificColumns ["Job Number"; "Quoted Tons That We Sold (From 'Jobs Quoted')"]
+             
          
-        let mergedQuotedVsSoldWithJobsQuoted3 = 
-            let mergedFrame = Frame.merge_On filteredJobsQuotedAndSold "Job Number" 0.0 quotedVsSold
-            mergedFrame.Columns.[["Job Number"; "Customer"; "J.Tons(Base)";"Quoted Tons That We Sold (From 'Jobs Quoted')"]]
+        let mergedQuotedVsSoldWithJobsQuoted3 =
+            quotedVsSold
+            |> Frame.merge_On filteredJobsQuotedAndSold "Job Number" 0.0
+            |> Frame.getSpecificColumns ["Job Number"; "Customer"; "J.Tons(Base)";"Quoted Tons That We Sold (From 'Jobs Quoted')"]
             |> Frame.sumSpecificColumnsBy "Customer" ["Quoted Tons That We Sold (From 'Jobs Quoted')"]
 
 
         let customerAnalysis =
             let newFrame =
                 mergedQuotedVsSoldWithJobsQuoted
-                |> Frame.merge_On mergedQuotedVsSoldWithJobsQuoted2 "Customer" 0.0 
                 |> Frame.merge_On soldByCustomer "Customer" 0.0
                 |> Frame.merge_On jobsQuotedAndSold "Customer" 0.0
                 |> Frame.merge_On mergedQuotedVsSoldWithJobsQuoted3 "Customer" 0.0
@@ -400,7 +412,7 @@ module Deedleing =
 
             newFrame.AddColumn("Sold Percentage (From 'Jobs Quoted')",
                 seq [ for v in newFrame.RowKeys do
-                        let quoted = newFrame.Rows.[v].["Quoted Tons That We Sold (From 'Jobs Quoted')"]
+                        let quoted = newFrame.Rows.[v].["Quoted Tons (From 'Jobs Quoted')"]
                         let sold = newFrame.Rows.[v].["Sold Tons"]
                         if (quoted :?> float) <> 0.0 then
                             yield (sold :?> float) / (quoted :?> float)
@@ -416,11 +428,18 @@ module Deedleing =
                                "Sold Percentage (From 'Jobs Quoted')"]]
                                //"Quoted Tons That We Sold To Others (From 'Quoted Vs. Sold')";
                                //"Quoted Tons That We Sold (From 'Quoted Vs. Sold')"]]
+        System.IO.Directory.CreateDirectory(@"Output\Temp") |> ignore
+        customerAnalysis.SaveCsv( @"Output\Temp\Customer Analysis_" + dsm + ".csv")
 
-        customerAnalysis.SaveCsv( @"..\..\..\Output\Fallon\Customer Analysis" +
-                                  System.DateTime.Now.ToString("MM_dd_yyy_HH_mm") + ".csv")
+        printfn "%A" ("Finished Report For " + dsm)
 
-        printfn "%A" "ALL FINISHED!"
+    let createDsmReports startDate endDate dsms =
+        for dsm in dsms do
+            createDsmReport startDate endDate dsm
+        printfn "%A" "All Finshed!"
+
+        
+
 
     let test () =
         let data =
