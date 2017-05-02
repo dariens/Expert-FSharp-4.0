@@ -450,15 +450,15 @@ module Deedleing =
  
     let createEstimatorReport () =
         //#r "../packages/Deedle.1.2.5/lib/net40/Deedle.dll"
-        //Environment.CurrentDirectory <- @"C:\Users\user\Documents\CODE\F#\Expert F# 4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug"
+        //System.Environment.CurrentDirectory <- @"U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug"
         //open Deedle
         //open System
 
         let jobsSold = Frame.ReadCsv(@"Data\Jobs Sold.csv")
         let jobsQuoted = Frame.ReadCsv(@"Data\Jobs Quoted.csv")
         let calander = new System.Globalization.GregorianCalendar()
-        let jobsQuotedCount =
-            let takeoffCount =
+        let estimatorAnalysis () =
+            let quotedJobsCount =
                 jobsQuoted
                 |> Frame.addCol "Week"
                     (jobsQuoted.GetColumn("Date Quoted")
@@ -472,9 +472,12 @@ module Deedleing =
                     |> Series.mapValues (fun value -> System.DateTime.Parse(value).Year))
                 |> Frame.aggregateRowsBy (seq ["TakeoffPerson"; "Year"; "Week"]) (seq ["Job Number"]) Stats.count
                 |> Frame.sortRows "TakeoffPerson"
-                |> Frame.renameColumn "Job Number" "# Takeoffs"
+                |> Frame.renameColumn "Job Number" "Values"
+                |> Frame.addCol "Report Type"
+                    ((seq [for row in [0..jobsQuoted.Rows.KeyCount-1] do yield "Jobs Quoted Count"])
+                     |> Series.ofValues)
            
-            let totalTons =
+            let quotedTons =
                 jobsQuoted
                 |> Frame.addCol "Week"
                     (jobsQuoted.GetColumn("Date Quoted")
@@ -488,42 +491,74 @@ module Deedleing =
                     |> Series.mapValues (fun value -> System.DateTime.Parse(value).Year))
                 |> Frame.aggregateRowsBy (seq ["TakeoffPerson"; "Year"; "Week"]) (seq ["Total Tons"]) Stats.sum
                 |> Frame.sortRows "TakeoffPerson"
-                |> Frame.renameColumn "Job Number" "# Takeoffs"
+                |> Frame.renameColumn "Total Tons" "Values"
+                |> Frame.addCol "Report Type"
+                    ((seq [for row in [0..jobsQuoted.Rows.KeyCount-1] do yield "Tons Quoted"])
+                     |> Series.ofValues)
 
-            let soldJobsCount =
+            let soldJobCount =
                 jobsSold
                 |> Frame.addCol "Week"
-                    (jobsSold.GetColumn("Date Quoted")
+                    (jobsSold.GetColumn("J. PO Date")
                      |> Series.mapValues (fun value -> 
                                              System.Globalization.GregorianCalendar().GetWeekOfYear(
                                               System.DateTime.Parse(value),
                                               System.Globalization.CalendarWeekRule.FirstDay,
                                               System.DayOfWeek.Sunday)))
                 |> Frame.addCol "Year"
-                    (jobsQuoted.GetColumn("Date Quoted")
+                    (jobsSold.GetColumn("J. PO Date")
                     |> Series.mapValues (fun value -> System.DateTime.Parse(value).Year))
-                |> Frame.aggregateRowsBy (seq ["TakeoffPerson"; "Year"; "Week"]) (seq ["Job Number"]) Stats.count
-                |> Frame.sortRows "TakeoffPerson"
-                |> Frame.renameColumn "Job Number" "# Takeoffs"
+                |> Frame.aggregateRowsBy (seq ["takeoffperson"; "Year"; "Week"]) (seq ["Job Number"]) Stats.count
+                |> Frame.sortRows "takeoffperson"
+                |> Frame.renameColumn "Job Number" "Values"
+                |> Frame.renameColumn "takeoffperson" "TakeoffPerson"
+                |> Frame.addCol "Report Type"
+                    ((seq [for row in [0..jobsSold.Rows.KeyCount-1] do yield "Jobs Sold Count"])
+                     |> Series.ofValues)
            
             let soldTons =
                 jobsSold
                 |> Frame.addCol "Week"
-                    (jobsSold.GetColumn("Date Quoted")
+                    (jobsSold.GetColumn("J. PO Date")
                      |> Series.mapValues (fun value -> 
                                              System.Globalization.GregorianCalendar().GetWeekOfYear(
                                               System.DateTime.Parse(value),
                                               System.Globalization.CalendarWeekRule.FirstDay,
                                               System.DayOfWeek.Sunday)))
                 |> Frame.addCol "Year"
-                    (jobsQuoted.GetColumn("Date Quoted")
+                    (jobsSold.GetColumn("J. PO Date")
                     |> Series.mapValues (fun value -> System.DateTime.Parse(value).Year))
-                |> Frame.aggregateRowsBy (seq ["TakeoffPerson"; "Year"; "Week"]) (seq ["Total Tons"]) Stats.sum
-                |> Frame.sortRows "TakeoffPerson"
-                |> Frame.renameColumn "Job Number" "# Takeoffs"
+                |> Frame.aggregateRowsBy (seq ["takeoffperson"; "Year"; "Week"]) (seq ["Total Tons"]) Stats.sum
+                |> Frame.sortRows "takeoffperson"
+                |> Frame.renameColumn "Sold Tons" "Values"
+                |> Frame.renameColumn "takeoffperson" "TakeoffPerson"
+                |> Frame.addCol "Report Type"
+                    ((seq [for row in [0..jobsSold.Rows.KeyCount-1] do yield "Sold Tons"])
+                     |> Series.ofValues)
 
-            takeoffCount.SaveCsv(@"Output\Estimator Takeoff Count.csv")
-            totalTons.SaveCsv(@"Output\Estimator Total Tons.csv")
+
+
+            quotedJobsCount.SaveCsv(@"Output\Estimator Takeoff Count.csv")
+            quotedTons.SaveCsv(@"Output\Estimator Total Tons.csv")
+            soldJobCount.SaveCsv(@"Output\Estimator Sold Job Count.csv")
+            soldTons.SaveCsv(@"Output\Estimator Sold Tons.csv")
+
+            
+            let createFileOfAllLine (files : string list) (outputPath : string) =
+                let mutable allLines = ""
+                for file in files do
+                    use sr = new System.IO.StreamReader(file)
+                    let lines = sr.ReadToEnd()
+                    allLines <- allLines + lines
+                use file = new System.IO.StreamWriter(outputPath)
+                file.Write allLines
+            
+            createFileOfAllLine ([@"Output\Estimator Takeoff Count.csv";
+                                   @"Output\Estimator Total Tons.csv";
+                                   @"Output\Estimator Sold Job Count.csv";
+                                   @"Output\Estimator Sold Tons.csv"]) @"Output\Estimator Analysis.csv"            
+        
+        estimatorAnalysis ()
         printfn "%s" "All Finished"
 
 
