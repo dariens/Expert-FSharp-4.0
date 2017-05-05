@@ -12,6 +12,7 @@ let main argv =
     //printfn "%s" "COMPLETE!"
     //test ()
     //createDsmReports (System.DateTime(2017, 1, 1)) System.DateTime.Now ["";"Martha Leon"; "Chris Cline"; "Bob Stearns"; "John Degidio"; "Johnny Martinez"]
-    createEstimatorReport ()
+    //createEstimatorReport ()
+    createCustomerAnalysis ()
     let s = System.Console.ReadLine()
     0 // return an integer exit code

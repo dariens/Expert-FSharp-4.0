@@ -8,7 +8,7 @@
     <ProjectGuid>4a6472ef-b876-4382-b967-89111b0d86cd</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>WeeklyWorkbookAnalysis</RootNamespace>
-    <AssemblyName>WeeklyWorkbookAnalysis</AssemblyName>
+    <AssemblyName>Customer Analysis</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>

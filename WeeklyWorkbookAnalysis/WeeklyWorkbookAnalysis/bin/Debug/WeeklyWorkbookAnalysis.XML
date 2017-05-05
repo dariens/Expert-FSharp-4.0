@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <doc>
-<assembly><name>WeeklyWorkbookAnalysis</name></assembly>
+<assembly><name>Customer Analysis</name></assembly>
 <members>
 <member name="T:ReportAnalysis.DsmReportAnalysis.FeedbackLine">
 <summary>

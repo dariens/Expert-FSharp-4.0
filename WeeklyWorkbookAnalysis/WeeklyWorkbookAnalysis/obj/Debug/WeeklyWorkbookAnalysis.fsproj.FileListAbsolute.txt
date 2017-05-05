@@ -64,3 +64,25 @@ U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\D
 U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\obj\Debug\WeeklyWorkbookAnalysis.fsproj.WeeklyWorkbookAnalysis.exe.config
 U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\obj\Debug\WeeklyWorkbookAnalysis.exe
 U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\obj\Debug\WeeklyWorkbookAnalysis.pdb
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\WeeklyWorkbookAnalysis.XML
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Deedle.dll
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\FSharp.Core.dll
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Microsoft.Office.Interop.Excel.dll
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Newtonsoft.Json.dll
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\office.dll
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\XPlot.Plotly.dll
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Microsoft.Vbe.Interop.dll
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\stdole.dll
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Deedle.pdb
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Deedle.xml
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Microsoft.Office.Interop.Excel.xml
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\FSharp.Core.xml
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Newtonsoft.Json.xml
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\office.xml
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\XPlot.Plotly.xml
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Customer Analysis.exe.config
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Customer Analysis.exe
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug\Customer Analysis.pdb
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\obj\Debug\WeeklyWorkbookAnalysis.fsproj.Customer Analysis.exe.config
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\obj\Debug\Customer Analysis.exe
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\obj\Debug\Customer Analysis.pdb

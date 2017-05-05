@@ -249,6 +249,9 @@ module Deedleing =
 
     open Deedle
     open System
+    open System.IO
+    open Microsoft.Office.Interop.Excel
+    open System.Runtime.InteropServices
 
     module Frame =
         let whereRowValuesInColMeetReq colIndex req frame =
@@ -333,6 +336,41 @@ module Deedleing =
             frame.RenameColumn(initialName, finalName)
             frame
 
+        let stack (stackFrame: Frame<'a, 'b>) (initialFrame: Frame<'a, 'b>) =
+            let initialFrame = initialFrame |> Frame.dropSparseRows
+            let stackFrame = stackFrame |> Frame.dropSparseRows
+            let cols = initialFrame.Columns.Keys
+            let allColumns =
+                [for col in cols do
+                    let initialValues = initialFrame.GetColumn(col).ValuesAll             
+                    let newValues = stackFrame.GetColumn(col).ValuesAll      
+                    let allValues = Seq.append initialValues newValues
+                    yield (col, Series.ofValues allValues)]
+            Frame.ofColumns allColumns
+
+        let replaceVaueInColumnWith column oldValue newValue (frame : Frame<_,_>) =
+            let newColumn = frame.GetColumn<'b>(column)
+                            |> Series.mapValues (fun v -> match v with
+                                                          | oldValue -> box newValue
+                                                          | _ -> box v )
+            frame.ReplaceColumn(column, newColumn)
+            frame
+
+        let removeCols columns (frame : Frame<_,_>) =
+            let allColumns = frame.Columns.Keys
+            let wantedColumns =
+                [for col in allColumns do
+                     if not (Seq.contains col columns) then
+                         yield col]
+            frame.Columns.[wantedColumns]
+
+            
+
+
+
+
+
+
     let createDsmReport startDate endDate dsm =
         //let startDate = System.DateTime(2017,1,1)
         //let endDate = System.DateTime.Now
@@ -346,7 +384,7 @@ module Deedleing =
                      |> Frame.whereRowValuesInColEqual "Quote DSM" [dsm]
 
         let jobsSold = Frame.ReadCsv(@"Data\Jobs Sold.csv")
-        let jobsQuoted = Frame.ReadCsv(@"Data\Jobs Quoted.csv")               
+        let jobsQuoted = Frame.ReadCsv(@"Data\Jobs Quoted.csv")
     
         let filteredJobsQuoted = 
             jobsQuoted
@@ -447,12 +485,159 @@ module Deedleing =
         for dsm in dsms do
             createDsmReport startDate endDate dsm
         printfn "%A" "All Finshed!"
- 
-    let createEstimatorReport () =
+
+
+    let createCustomerAnalysis () =
+        //let startDate = System.DateTime(2017,1,1)
+        //let endDate = System.DateTime.Now
         //#r "../packages/Deedle.1.2.5/lib/net40/Deedle.dll"
-        //System.Environment.CurrentDirectory <- @"U:\CODE\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug"
+        //System.Environment.CurrentDirectory <- @"C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug"
         //open Deedle
         //open System
+        
+        let quotedVsSold = Frame.ReadCsv(@"Data\Quoted Vs Sold.csv")
+        let jobsSold = Frame.ReadCsv(@"Data\Jobs Sold.csv")
+        let jobsQuoted = Frame.ReadCsv(@"Data\Jobs Quoted.csv")
+
+        printfn "Step 1 of 6 Complete"
+
+        let calander = new System.Globalization.GregorianCalendar()
+
+        let jobsSoldInfo =
+            jobsSold
+            |> Frame.addCol "Sold Month"
+                (jobsSold.GetColumn("J. PO Date")
+                    |> Series.mapValues (fun value -> 
+                                            System.Globalization.GregorianCalendar().GetMonth(
+                                            System.DateTime.Parse(value))))
+            |> Frame.addCol "Sold Year"
+                (jobsSold.GetColumn("J. PO Date")
+                |> Series.mapValues (fun value -> System.DateTime.Parse(value).Year))
+            |> Frame.getSpecificColumns ["Job Number"; "Total Tons"; "Sold Month"; "Sold Year"]
+            |> Frame.renameColumn "Total Tons" "Sold Tons"
+            |> Frame.map (fun r c (v: string) -> v.Trim())
+
+        printfn "Step 2 of 6 Complete"
+
+        let jobsQuotedInfo =
+            jobsQuoted
+            |> Frame.addCol "Quoted Month"
+                    (jobsQuoted.GetColumn("Date Quoted")
+                     |> Series.mapValues (fun value -> 
+                                             System.Globalization.GregorianCalendar().GetMonth(
+                                              System.DateTime.Parse(value))))
+            |> Frame.addCol "Quoted Year"
+                    (jobsQuoted.GetColumn("Date Quoted")
+                    |> Series.mapValues (fun value -> System.DateTime.Parse(value).Year))
+            |> Frame.getSpecificColumns ["Job Number"; "Total Tons"]
+            |> Frame.renameColumn "Total Tons" "Quoted Tons"
+            |> Frame.map (fun r c (v: string) -> v.Trim())
+
+        printfn "Step 3 of 6 Complete"  
+           
+        let quotedVsSoldInfo =
+            quotedVsSold
+            |> Frame.getSpecificColumns ["Job Number"; "Customer"; "Quote DSM"; "Sold"; "J.Tons Sold"; "Job Last Changed"]
+            |> Frame.addCol "QvS Month"
+                    (quotedVsSold.GetColumn("Job Last Changed")
+                        |> Series.mapValues (fun value -> 
+                                                System.Globalization.GregorianCalendar().GetMonth(
+                                                  System.DateTime.Parse(value))))
+            |> Frame.addCol "QvS Year"
+                    (quotedVsSold.GetColumn("Job Last Changed")
+                    |> Series.mapValues (fun value -> System.DateTime.Parse(value).Year))
+
+            |> Frame.removeCols ["Job Last Changed"]
+            |> Frame.map (fun r c (v: string) -> v.Trim())
+        
+        printfn "Step 4 of 6 Complete"
+           
+        let mergedFrame =
+            let frame =
+                quotedVsSoldInfo
+                |> Frame.merge_On jobsSoldInfo "Job Number" "blank"
+                |> Frame.merge_On jobsQuotedInfo "Job Number" "blank"
+            let actualMonth =
+                let qvsMonthCol = frame.GetColumn<obj>("QvS Month")
+                let soldMonthCol = frame.GetColumn<obj>("Sold Month")
+                [for key in qvsMonthCol.Keys do
+                   if soldMonthCol.[key] = box "blank" then
+                       yield qvsMonthCol.[key]
+                   else
+                       yield soldMonthCol.[key]]
+            frame.AddColumn("Month", actualMonth)
+            let actualYear =
+                let qvsYearCol = frame.GetColumn<obj>("QvS Year")
+                let soldYearCol = frame.GetColumn<obj>("Sold Year")
+                [for key in qvsYearCol.Keys do
+                   if soldYearCol.[key] = box "blank" then
+                       yield qvsYearCol.[key]
+                   else
+                       yield soldYearCol.[key]]
+            frame.AddColumn("Year", actualYear)
+            let actualSoldTons =
+                let jSoldColumn = frame.GetColumn<bool>("Sold")
+                let soldTonsColumn = frame.GetColumn<obj>("Sold Tons") |> Series.fillMissingWith 0.0
+                [ for key in jSoldColumn.Keys do
+                    if jSoldColumn.[key] = false || soldTonsColumn.[key] = (box "blank") then
+                        yield (box null)
+                    else
+                        yield soldTonsColumn.[key]]
+            frame.ReplaceColumn("Sold Tons", actualSoldTons)
+            let actualQuotedTons =
+                let quotedTonsColumn = frame.GetColumn<obj>("Quoted Tons")
+                [ for key in quotedTonsColumn.Keys do
+                    let v = quotedTonsColumn.[key]
+                    if v = (box 0) || v = (box "blank") || v = (box 0M) then
+                        yield (box null)
+                    else
+                        yield quotedTonsColumn.[key]]
+            frame.ReplaceColumn("Quoted Tons", actualQuotedTons)
+            frame.Columns.[["Job Number"; "Customer"; "Quote DSM"; "Sold Tons"; "Quoted Tons"; "Month"; "Year"; "Q. Tons"]]
+            
+        printfn "Step 5 of 6 Complete"
+        
+        mergedFrame.SaveCsv(@"Output\Customer Analysis.csv")
+
+        let outputPath = System.IO.Path.GetFullPath(@"Output\")
+
+        let app = new ApplicationClass(Visible = false)
+        let csv = app.Workbooks.Open(outputPath + "Customer Analysis.csv")
+        let csvSheet = (csv.Worksheets.[1] :?> Worksheet)
+        let custAnaly = app.Workbooks.Open(outputPath + "Customer Analysis - Blank.xlsx")
+        let custAnalySheet = (custAnaly.Worksheets.[1] :?> Worksheet)
+        let csvRange = csvSheet.UsedRange
+        custAnalySheet.Range("A2", "G" + string (csvRange.Rows.Count + 1)).Value2 <- csvSheet.UsedRange.Value2
+        custAnalySheet.Range("A2:G2").Delete() |> ignore
+        let tableSheet = (custAnaly.Worksheets.[2] :?> Worksheet)
+        let table = (tableSheet.PivotTables("pivTableCustomerAnalysis") :?> PivotTable)
+        table.RefreshTable() |> ignore
+
+        app.DisplayAlerts <- false
+        custAnaly.SaveAs(outputPath + "Customer Analysis.xlsx")
+        
+        printfn "Step 6 of 6 Complete" 
+                    
+        Marshal.ReleaseComObject(csvSheet) |> ignore
+        Marshal.ReleaseComObject(custAnalySheet) |> ignore
+        Marshal.ReleaseComObject(tableSheet)  |> ignore
+        csv.Close()
+        Marshal.ReleaseComObject(csv)  |> ignore
+        custAnaly.Close()
+        Marshal.ReleaseComObject(custAnaly) |> ignore          
+        app.Quit()
+        Marshal.ReleaseComObject(app) |> ignore
+        System.GC.Collect()
+        System.IO.File.Delete(outputPath + "Customer Analysis.csv")
+        printfn "%s" "All Finished!"
+
+
+    let createEstimatorReport () =
+        //#r "../packages/Deedle.1.2.5/lib/net40/Deedle.dll"
+        //System.Environment.CurrentDirectory <- @"C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\WeeklyWorkbookAnalysis\WeeklyWorkbookAnalysis\bin\Debug"
+        //open Deedle
+        //open System
+
 
         let jobsSold = Frame.ReadCsv(@"Data\Jobs Sold.csv")
         let jobsQuoted = Frame.ReadCsv(@"Data\Jobs Quoted.csv")
@@ -530,33 +715,63 @@ module Deedleing =
                     |> Series.mapValues (fun value -> System.DateTime.Parse(value).Year))
                 |> Frame.aggregateRowsBy (seq ["takeoffperson"; "Year"; "Week"]) (seq ["Total Tons"]) Stats.sum
                 |> Frame.sortRows "takeoffperson"
-                |> Frame.renameColumn "Sold Tons" "Values"
+                |> Frame.renameColumn "Total Tons" "Values"
                 |> Frame.renameColumn "takeoffperson" "TakeoffPerson"
                 |> Frame.addCol "Report Type"
                     ((seq [for row in [0..jobsSold.Rows.KeyCount-1] do yield "Sold Tons"])
                      |> Series.ofValues)
 
 
+            let allData =
+                quotedJobsCount
+                |> Frame.stack quotedTons
+                |> Frame.stack soldJobCount
+                |> Frame.stack soldTons
+            
+            allData.SaveCsv(@"Output\Estimator Analysis.csv")
 
-            quotedJobsCount.SaveCsv(@"Output\Estimator Takeoff Count.csv")
-            quotedTons.SaveCsv(@"Output\Estimator Total Tons.csv")
-            soldJobCount.SaveCsv(@"Output\Estimator Sold Job Count.csv")
-            soldTons.SaveCsv(@"Output\Estimator Sold Tons.csv")
+            //let app = new Microsoft.Office.Interop.Excel.ApplicationClass(Visible = false)
+            //let workbook = app.Workbooks.Open(@"Output\EstimatorAnalysis.csv")
+            //let worksheet = (estAnalyCsv.Worksheets.[0] :?> Worksheet)
+            let outputPath = System.IO.Path.GetFullPath(@"Output\")
+
+            let app = new ApplicationClass(Visible = false)
+            let csv = app.Workbooks.Open(outputPath + "Estimator Analysis.csv")
+            let csvSheet = (csv.Worksheets.[1] :?> Worksheet)
+            let estAnaly = app.Workbooks.Open(outputPath + "Estimator Analysis - Blank.xlsx")
+            let estAnalySheet = (estAnaly.Worksheets.[1] :?> Worksheet)
+            let csvRange = csvSheet.UsedRange
+            estAnalySheet.Range("A2", "E" + string (csvRange.Rows.Count + 1)).Value2 <- csvSheet.UsedRange.Value2
+            estAnalySheet.Range("A2:E2").Delete() |> ignore
+            let tableSheet = (estAnaly.Worksheets.[2] :?> Worksheet)
+            let table = (tableSheet.PivotTables("PivTabEstimatorAnalysis") :?> PivotTable)
+            table.RefreshTable() |> ignore
+
+            app.DisplayAlerts <- false
+            estAnaly.SaveAs(outputPath + "Estimator Analysis.xlsx")
+            
+                    
+            Marshal.ReleaseComObject(csvSheet) |> ignore
+            Marshal.ReleaseComObject(estAnalySheet) |> ignore
+            Marshal.ReleaseComObject(tableSheet)  |> ignore
+            csv.Close()
+            Marshal.ReleaseComObject(csv)  |> ignore
+            estAnaly.Close()
+            Marshal.ReleaseComObject(estAnaly) |> ignore          
+            app.Quit()
+            Marshal.ReleaseComObject(app) |> ignore
+            System.GC.Collect()
+            System.IO.File.Delete(outputPath + "Estimator Analysis.csv")
+
+
 
             
-            let createFileOfAllLine (files : string list) (outputPath : string) =
-                let mutable allLines = ""
-                for file in files do
-                    use sr = new System.IO.StreamReader(file)
-                    let lines = sr.ReadToEnd()
-                    allLines <- allLines + lines
-                use file = new System.IO.StreamWriter(outputPath)
-                file.Write allLines
+
+
             
-            createFileOfAllLine ([@"Output\Estimator Takeoff Count.csv";
-                                   @"Output\Estimator Total Tons.csv";
-                                   @"Output\Estimator Sold Job Count.csv";
-                                   @"Output\Estimator Sold Tons.csv"]) @"Output\Estimator Analysis.csv"            
+
+
+    
         
         estimatorAnalysis ()
         printfn "%s" "All Finished"
@@ -569,11 +784,31 @@ module Deedleing =
                  (0, "Col 3", box 40);
                  (1, "Name", box "Niko");
                  (1, "Col 2", box 6);
-                 (1, "Col 3", box 7);
+                 //(1, "Col 3", box 7);
                  (2, "Name", box "Nedelee");
                  (2, "Col 2", box 150);
                  (2, "Col 3", box 160);
                  (3, "Name", box "Darien");
+                 (3, "Col 2", box 30);
+                 (3, "Col 3", box 40);
+                 //(4, "Name", box "Niko");
+                 (4, "Col 2", box 6);
+                 (4, "Col 3", box 7);
+                 (5, "Name", box "Nedelee");
+                 (5, "Col 2", box 150);
+                 (5, "Col 3", box 160)] |> Frame.ofValues
+
+        let data2 =
+                [(0, "Name", box "Darien");
+                 (0, "Col 2", box 30);
+                 (0, "Col 3", box 40);
+                 //(1, "Name", box "Niko");
+                 (1, "Col 2", box 6);
+                 (1, "Col 3", box 7);
+                 (2, "Name", box "Nedelee");
+                 (2, "Col 2", box 150);
+                 (2, "Col 3", box 160);
+                 //(3, "Name", box "Darien");
                  (3, "Col 2", box 30);
                  (3, "Col 3", box 40);
                  (4, "Name", box "Niko");
@@ -581,8 +816,10 @@ module Deedleing =
                  (4, "Col 3", box 7);
                  (5, "Name", box "Nedelee");
                  (5, "Col 2", box 150);
-                 (5, "Col 3", box 160)] |> Frame.ofValues |> Frame.sumSpecificColumnsBy "Name" ["Col 2"] 
-        
-        printfn "%A" (data.Format())
+                 (5, "Col 3", box 160)] |> Frame.ofValues
+
+        Frame.stack data2 data
+
+
 
          
