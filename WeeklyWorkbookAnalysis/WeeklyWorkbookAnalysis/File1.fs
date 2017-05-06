@@ -274,33 +274,47 @@ module Deedleing =
                                                         let date = System.DateTime.Parse(string date)
                                                         date >= startDate && date <= endDate)
 
-        let removeDuplicateRows index (df : Frame<'a, 'b>) =
-          let unique = Seq.distinctBy (fun (a, b) -> a) (df.GroupRowsBy(index).RowKeys)
+        let removeDuplicateRows index (frame : Frame<'a, 'b>) =
+          let unique = Seq.distinctBy (fun (a, b) -> a) (frame.GroupRowsBy(index).RowKeys)
           let nonDupKeys = 
               [for tup in unique do
                   let value, key = tup
                   yield key]
-          df.Rows.[nonDupKeys]
+          frame.Rows.[nonDupKeys]
         
         
-        let merge_On (infoFrame : Frame<'c, 'b>) index missingReplacement (initialFrame : Frame<'a,'b>) =
-              let newFrame = initialFrame.Clone()
-              let newInfoFrame = infoFrame.Clone()
-                               |> removeDuplicateRows index 
-                               |> Frame.indexRowsString index
-              let initialSeries = newFrame.GetColumn(index)
-              for colKey in newInfoFrame.ColumnKeys do
+        let merge_On (infoFrame : Frame<'c, 'b>) column missingReplacement (initialFrame : Frame<'a,'b>) =
+              let frame = initialFrame.Clone()
+              let infoFrame = infoFrame.Clone()
+                               |> removeDuplicateRows column 
+                               |> Frame.indexRowsString column
+              let initialSeries = frame.GetColumn(column)
+              let infoFrameRows = infoFrame.RowKeys
+              for colKey in infoFrame.ColumnKeys do
                   let newSeries =
-                      [for f in initialSeries.ValuesAll do
-                            if Seq.contains f newInfoFrame.RowKeys then  
-                                let key = newInfoFrame.GetRow(f)
-                                let newValue = key.[colKey]
-                                yield newValue
+                      [for v in initialSeries.ValuesAll do
+                            if Seq.contains v infoFrameRows then  
+                                let key = infoFrame.GetRow(v)
+                                yield key.[colKey]
                             else
-                                let newValue = box missingReplacement
-                                yield newValue]
-                  newFrame.AddColumn(colKey, newSeries)
-              newFrame
+                                yield box missingReplacement ]
+                  frame.AddColumn(colKey, newSeries)
+              frame
+
+        let merge_On2 (infoFrame : Frame<'c, 'b>) column missingReplacement (initialFrame : Frame<'a,'b>) =
+              let infoFrame = infoFrame
+                              |> removeDuplicateRows column
+                              |> Frame.indexRows column
+
+              let infoMatched =
+                  initialFrame.Rows
+                  |> Series.map (fun k row ->
+                      infoFrame.Rows.TryGet(row.GetAs(column)).ValueOrDefault)
+                  |> Series.fillMissingWith missingReplacement
+                  |> Frame.ofRows
+              
+              initialFrame.Join(infoMatched) |> ignore
+              initialFrame
 
         
 
@@ -509,7 +523,7 @@ module Deedleing =
                 (jobsSold.GetColumn("J. PO Date")
                     |> Series.mapValues (fun value -> 
                                             System.Globalization.GregorianCalendar().GetMonth(
-                                            System.DateTime.Parse(value))))
+                                             System.DateTime.Parse(value))))
             |> Frame.addCol "Sold Year"
                 (jobsSold.GetColumn("J. PO Date")
                 |> Series.mapValues (fun value -> System.DateTime.Parse(value).Year))
@@ -555,8 +569,9 @@ module Deedleing =
         let mergedFrame =
             let frame =
                 quotedVsSoldInfo
-                |> Frame.merge_On jobsSoldInfo "Job Number" "blank"
-                |> Frame.merge_On jobsQuotedInfo "Job Number" "blank"
+                |> Frame.merge_On jobsSoldInfo "Job Number" "blank"     /// test here
+                |> Frame.merge_On jobsQuotedInfo "Job Number" "blank"   /// test here
+
             let actualMonth =
                 let qvsMonthCol = frame.GetColumn<obj>("QvS Month")
                 let soldMonthCol = frame.GetColumn<obj>("Sold Month")
@@ -594,17 +609,19 @@ module Deedleing =
                         yield quotedTonsColumn.[key]]
             frame.ReplaceColumn("Quoted Tons", actualQuotedTons)
             frame.Columns.[["Job Number"; "Customer"; "Quote DSM"; "Sold Tons"; "Quoted Tons"; "Month"; "Year"; "Q. Tons"]]
+        
             
         printfn "Step 5 of 6 Complete"
         
         mergedFrame.SaveCsv(@"Output\Customer Analysis.csv")
 
         let outputPath = System.IO.Path.GetFullPath(@"Output\")
+        let resourcePath = System.IO.Path.GetFullPath(@"Resources\")
 
         let app = new ApplicationClass(Visible = false)
         let csv = app.Workbooks.Open(outputPath + "Customer Analysis.csv")
         let csvSheet = (csv.Worksheets.[1] :?> Worksheet)
-        let custAnaly = app.Workbooks.Open(outputPath + "Customer Analysis - Blank.xlsx")
+        let custAnaly = app.Workbooks.Open(resourcePath+ "Customer Analysis - Blank.xlsx")
         let custAnalySheet = (custAnaly.Worksheets.[1] :?> Worksheet)
         let csvRange = csvSheet.UsedRange
         custAnalySheet.Range("A2", "G" + string (csvRange.Rows.Count + 1)).Value2 <- csvSheet.UsedRange.Value2
@@ -734,11 +751,12 @@ module Deedleing =
             //let workbook = app.Workbooks.Open(@"Output\EstimatorAnalysis.csv")
             //let worksheet = (estAnalyCsv.Worksheets.[0] :?> Worksheet)
             let outputPath = System.IO.Path.GetFullPath(@"Output\")
+            let resourcePath = System.IO.Path.GetFullPath(@"Resources\")
 
             let app = new ApplicationClass(Visible = false)
             let csv = app.Workbooks.Open(outputPath + "Estimator Analysis.csv")
             let csvSheet = (csv.Worksheets.[1] :?> Worksheet)
-            let estAnaly = app.Workbooks.Open(outputPath + "Estimator Analysis - Blank.xlsx")
+            let estAnaly = app.Workbooks.Open(resourcePath + "Estimator Analysis - Blank.xlsx")
             let estAnalySheet = (estAnaly.Worksheets.[1] :?> Worksheet)
             let csvRange = csvSheet.UsedRange
             estAnalySheet.Range("A2", "E" + string (csvRange.Rows.Count + 1)).Value2 <- csvSheet.UsedRange.Value2
@@ -776,50 +794,56 @@ module Deedleing =
         estimatorAnalysis ()
         printfn "%s" "All Finished"
 
+    open Deedle
 
     let test () =
-        let data =
-                [(0, "Name", box "Darien");
-                 (0, "Col 2", box 30);
-                 (0, "Col 3", box 40);
-                 (1, "Name", box "Niko");
-                 (1, "Col 2", box 6);
-                 //(1, "Col 3", box 7);
-                 (2, "Name", box "Nedelee");
-                 (2, "Col 2", box 150);
-                 (2, "Col 3", box 160);
-                 (3, "Name", box "Darien");
-                 (3, "Col 2", box 30);
-                 (3, "Col 3", box 40);
-                 //(4, "Name", box "Niko");
-                 (4, "Col 2", box 6);
-                 (4, "Col 3", box 7);
-                 (5, "Name", box "Nedelee");
-                 (5, "Col 2", box 150);
-                 (5, "Col 3", box 160)] |> Frame.ofValues
 
-        let data2 =
-                [(0, "Name", box "Darien");
-                 (0, "Col 2", box 30);
-                 (0, "Col 3", box 40);
-                 //(1, "Name", box "Niko");
-                 (1, "Col 2", box 6);
-                 (1, "Col 3", box 7);
-                 (2, "Name", box "Nedelee");
-                 (2, "Col 2", box 150);
-                 (2, "Col 3", box 160);
-                 //(3, "Name", box "Darien");
-                 (3, "Col 2", box 30);
-                 (3, "Col 3", box 40);
-                 (4, "Name", box "Niko");
-                 (4, "Col 2", box 6);
-                 (4, "Col 3", box 7);
-                 (5, "Name", box "Nedelee");
-                 (5, "Col 2", box 150);
-                 (5, "Col 3", box 160)] |> Frame.ofValues
-
-        Frame.stack data2 data
+        let removeDuplicateRows index (frame : Frame<'a, 'b>) =
+          let unique = Seq.distinctBy (fun (a, b) -> a) (frame.GroupRowsBy(index).RowKeys)
+          let nonDupKeys = 
+              [for tup in unique do
+                  let value, key = tup
+                  yield key]
+          frame.Rows.[nonDupKeys]
+        
+        
+        let merge_On (infoFrame : Frame<'c, 'b>) column missingReplacement (initialFrame : Frame<'a,'b>) =
+              let frame = initialFrame.Clone()
+              let infoFrame = infoFrame.Clone()
+                               |> removeDuplicateRows column 
+                               |> Frame.indexRows column
+              let initialSeries = frame.GetColumn(column)
+              let infoFrameRows = infoFrame.RowKeys
+              for colKey in infoFrame.ColumnKeys do
+                  let newSeries =
+                      [for v in initialSeries.ValuesAll do
+                            if Seq.contains v infoFrameRows then  
+                                let key = infoFrame.GetRow(v)
+                                yield key.[colKey]
+                            else
+                                yield box missingReplacement ]
+                  frame.AddColumn(colKey, newSeries)
+              frame
 
 
+        let primaryFrame =
+             [(0, "Job Name", box "Job 1")
+              (0, "City, State", box ("Reno", "NV"))
+              (1, "Job Name", box "Job 2")
+              (1, "City, State", box ("Portland", "OR"))
+              (2, "Job Name", box "Job 3")
+              (2, "City, State", box ("Portland", "OR"))
+              (3, "Job Name", box "Job 4")
+              (3, "City, State", box ("Sacramento", "CA"))] |> Frame.ofValues
 
+        let infoFrame =
+            [(0, "City, State", box ("Reno", "NV"))
+             (0, "Lat", box "Reno_NV_Lat")
+             (0, "Long", box "Reno_NV_Long")
+             (1, "City, State", box ("Portland", "OR"))
+             (1, "Lat", box "Portland_OR_Lat")
+             (1, "Long", box "Portland_OR_Long")] |> Frame.ofValues
+
+
+        primaryFrame |> merge_On infoFrame "City, State" null
          
