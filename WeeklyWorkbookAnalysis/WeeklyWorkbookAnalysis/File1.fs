@@ -7,7 +7,6 @@ module DsmReportAnalysis =
     open Microsoft.Office.Interop.Excel
     open System.IO
     open System.Runtime.InteropServices
-    open XPlot.Plotly
     
 
 
@@ -88,7 +87,7 @@ module DsmReportAnalysis =
         worksheet.Range("H1").Value2 <- "DSM"
         worksheet.Range("I1").Value2 <- "Week Start"
         
-        workbook.SaveAs(@"\\nmbsfaln-fs\sales\TOOLS\WEEKLY SALES REPORT\Reporting\Report" + "_" + System.DateTime.Now.ToString("MM_dd_yyy_HH_mm") + ".xlsx")
+        workbook.SaveAs(@"\\nmbsfaln-fs\sales\TOOLS\WEEKLY SALES REPORT\Weekly Workbook Analysis\Report_Temp.xlsx")
         Marshal.ReleaseComObject(worksheet) |> ignore
         workbook.Close()
         Marshal.ReleaseComObject(workbook) |> ignore
@@ -190,7 +189,7 @@ module DsmReportAnalysis =
         let returns =
             [ for s in workbook.Worksheets do
                 let s = s :?> Worksheet
-                let invalidSheets = ["Current"; "JOIST FEEDBACK"; "DECK FEEDBACK"]
+                let invalidSheets = ["Current"; "JOIST FEEDBACK"; "DECK FEEDBACK"; "Tables"]
                 if (List.contains s.Name invalidSheets) = false then
                     yield getJoistFeedback s ]
         let jfeedbackList = List.concat returns
@@ -275,11 +274,9 @@ module Deedleing =
                                                         date >= startDate && date <= endDate)
 
         let removeDuplicateRows index (frame : Frame<'a, 'b>) =
-          let unique = Seq.distinctBy (fun (a, b) -> a) (frame.GroupRowsBy(index).RowKeys)
-          let nonDupKeys = 
-              [for tup in unique do
-                  let value, key = tup
-                  yield key]
+          let nonDupKeys = frame.GroupRowsBy(index).RowKeys
+                           |> Seq.distinctBy (fun (a, b) -> a)
+                           |> Seq.map (fun (a, b) -> b)
           frame.Rows.[nonDupKeys]
         
         
@@ -846,4 +843,51 @@ module Deedleing =
 
 
         primaryFrame |> merge_On infoFrame "City, State" null
+
+
+
+        let fizzBuzz n = 
+            [1..n]
+            |> List.map (fun n ->
+                          match n with
+                          | fizzBuzz when fizzBuzz % 3 = 0 && fizzBuzz % 5 = 0 -> box "FizzBuzz"
+                          | fizz when fizz % 3 = 0 -> box "Fizz"
+                          | buzz when buzz % 5 = 0 -> box "Buzz"
+                          | _ as value -> box value)
+            |> List.iter (fun x -> printf "%A, " x)
+
+        fizzBuzz 100
+
+        let mutable counter = 0
+        for x in [1..10] do
+            counter <- counter + 1
+            printf "%i, " counter
+
+        let fizzBuzzList n =
+            let rec fizzBuzz n acc =
+                match n with
+                | 0 -> acc
+                | n when n % 3 = 0 && n % 5 = 0 -> fizzBuzz (n-1) ("FizzBuzz" :: acc)
+                | n when n % 3 = 0 -> fizzBuzz (n-1) ("Fizz" :: acc)
+                | n when n % 5 = 0 -> fizzBuzz (n-1) ("Buzz" :: acc)
+                | _ as n -> fizzBuzz (n-1) ((sprintf "%i" n) :: acc)
+            fizzBuzz n []
+
+        let printFizzBuzz n =
+            fizzBuzzList n
+            |> List.iter (fun s -> printfn "%s" s)
+
+        printFizzBuzz 1000
+
+        let rec fizzBuzz n =
+            match n with
+            | 0 -> ""
+            | n when n % 3 = 0 && n % 5 = 0 -> fizzBuzz(n-1) + ", FizzBuzz"
+            | n when n % 3 = 0 -> fizzBuzz(n-1) + ", Fizz "
+            | n when n % 5 = 0 -> fizzBuzz(n-1) + ", Buzz "
+            | _ as n -> fizzBuzz(n-1) + sprintf ", %i " n
+          
+        fizzBuzz 100000
+   
+
          
