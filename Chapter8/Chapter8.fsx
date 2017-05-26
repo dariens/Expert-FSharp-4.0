@@ -128,7 +128,7 @@ let orders =
     [ for customer in inputs do
           for order in customer.Orders do
               for line in order.OrderLines do
-                  yield (customer.Name,order.Number,line.Item,line.Quantity) ]
+                  yield (customer.Name,order.Number,line.Item,line.Quantity)]
 
 
 [<Literal>]
