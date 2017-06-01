@@ -1,0 +1,7 @@
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\FsLab.Templates-journal\bin\Debug\FsLab_Journal.XML
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\FsLab.Templates-journal\bin\Debug\FsLab.Journal.exe
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\FsLab.Templates-journal\bin\Debug\FsLab.Journal.pdb
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\FsLab.Templates-journal\bin\Debug\FSharp.Core.dll
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\FsLab.Templates-journal\bin\Debug\FSharp.Core.xml
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\FsLab.Templates-journal\obj\Debug\FsLab.Journal.exe
+C:\Users\user\Documents\CODE\F#\Expert F# 4.0\FsLab.Templates-journal\obj\Debug\FsLab.Journal.pdb
