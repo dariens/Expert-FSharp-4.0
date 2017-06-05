@@ -7,20 +7,27 @@ open Structural
 open Shapes
 open Materials
 
-let myAngle1 = SingleAngle {horizontalLeg = 3.0<inch>;
-                            verticalLeg = 3.0<inch>;
-                            thickness = 0.25<inch>;
-                            radius = 0.0<inch>}
+
+
+let myAngle1 = SingleAngle {verticalLeg = 4.0<inch>;
+                            horizontalLeg = 4.0<inch>;
+                            thickness = 0.5<inch>}
+
+myAngle1.Area, myAngle1.x_bar, myAngle1.y_bar
+
+let myDoubleAngle = DoubleAngle {verticalLeg = 4.0<inch>;
+                                 horizontalLeg= 4.0<inch>;
+                                 thickness = 0.5<inch>;
+                                 gap = 1.0<inch>}
+
+myDoubleAngle.Area, myDoubleAngle.x_bar, myDoubleAngle.y_bar
+
+ 
 
 let myAngle2 = SingleAngle (SingleAngle.Create 3.0<inch> 3.0<inch> 0.25<inch> 0.0<inch>)
 
 myAngle1 = myAngle2
 
-let myDoubleAngle = DoubleAngle{horizontalLeg = 3.0<inch>;
-                                verticalLeg = 3.0<inch>;
-                                thickness = 0.25<inch>;
-                                radius = 0.0<inch>;
-                                gap = 1.0<inch>}
 
     
 
@@ -30,6 +37,14 @@ printfn @"%s Area : %f
         
   
 let twoByTwoByQuarter = AISC.SingleAngles.``L2x2x1/4``
+
+let myEightBy = SingleAngle {horizontalLeg = 8.0<inch>
+                             verticalLeg = 8.0<inch>
+                             thickness = 0.875<inch>}
+
+myEightBy.Area
+
+let area = twoByTwoByQuarter.Area
 
 let myMaterial = SteelMaterial {fy = 50.0<ksi>; fu = 60.0<ksi>; E = 29000.0<ksi>}
 

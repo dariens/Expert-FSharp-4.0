@@ -8,26 +8,27 @@ open System.Collections.Generic
 [<Measure>] type ksi = kip/inch^2
 
 
-type SingleAngle = {horizontalLeg : float<inch>;
-                    verticalLeg : float<inch>;
-                    thickness : float<inch>;
-                    radius : float<inch>}
+type SingleAngle = {verticalLeg : float<inch>;
+                    horizontalLeg : float<inch>;
+                    thickness : float<inch>}
 
-                    static member Create hLeg vLeg t r = {horizontalLeg = hLeg;
-                                                          verticalLeg = vLeg;
-                                                          thickness = t;
-                                                          radius = r}
+                    static member Create hLeg vLeg t r = {verticalLeg = vLeg;
+                                                          horizontalLeg = hLeg;
+                                                          thickness = t}
 
-type DoubleAngle = {horizontalLeg : float<inch>;
-                    verticalLeg : float<inch>;
+type DoubleAngleOrientation =
+    | LLBB
+    | SLBB
+
+type DoubleAngle = {verticalLeg : float<inch>;
+                    horizontalLeg : float<inch>;
                     thickness : float<inch>;
-                    radius : float<inch>;
                     gap : float<inch>}
 
-                    static member Create hLeg vLeg t r gap = {horizontalLeg = hLeg;
-                                                              verticalLeg = vLeg;
+                    
+                    static member Create vLeg hLeg t r gap = {verticalLeg = vLeg;
+                                                              horizontalLeg = hLeg;
                                                               thickness = t;
-                                                              radius = r;
                                                               gap = gap}
                                                               
 type StructuralShape =
@@ -39,12 +40,29 @@ type StructuralShape =
         | SingleAngle sa -> (sa.horizontalLeg + sa.verticalLeg - sa.thickness) * sa.thickness
         | DoubleAngle da -> 2.0 * (da.horizontalLeg + da.verticalLeg - da.thickness) * da.thickness
 
+    member ss.x_bar =
+        match ss with
+        | SingleAngle sa as singleAngle ->
+                            (sa.horizontalLeg * sa.thickness * sa.horizontalLeg/2.0 +
+                             ((sa.verticalLeg - sa.thickness) * sa.thickness * sa.thickness/2.0)) / singleAngle.Area
+        | DoubleAngle _ -> 0.0<inch>
+
+    member ss.y_bar =
+        match ss with
+        | SingleAngle sa as singleAngle ->
+              ((sa.horizontalLeg - sa.thickness) * sa.thickness * sa.thickness/2.0 +
+               (sa.verticalLeg * sa.thickness * sa.verticalLeg/2.0)) / singleAngle.Area
+        | DoubleAngle da as doubleAngle ->
+              ((da.horizontalLeg - da.thickness) * da.thickness * da.thickness/2.0 +
+               (da.verticalLeg * da.thickness * da.verticalLeg/2.0)) / (doubleAngle.Area / 2.0)
+                             
+
     member ss.Description =
         match ss with
         | SingleAngle sa -> String.Format("L{0}x{1}x{2}",
-                                          sa.horizontalLeg, sa.verticalLeg, sa.thickness)
-        | DoubleAngle da -> String.Format("2L{0}x{1}x{2}",
-                                          da.horizontalLeg, da.verticalLeg, da.thickness)
+                                          sa.verticalLeg, sa.horizontalLeg, sa.thickness)
+        | DoubleAngle da -> String.Format("2L{0}x{1}x{2}x{3}",
+                                          da.verticalLeg, da.horizontalLeg, da.thickness, da.gap)
 
 
 type SteelMaterial = {fy : float<kip/inch^2>
