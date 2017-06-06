@@ -4,9 +4,8 @@ open System
 open System.Collections.Generic
 
 [<Measure>] type inch
-[<Measure>] type lbf
 
-module StructuralShape =
+module StructuralShapes =
 
 
     type SingleAngle = {verticalLeg : float<inch>;
@@ -23,11 +22,21 @@ module StructuralShape =
                            thickness : float<inch>;
                            radius : float<inch>}
 
+                           member ccsa.Blank = 
+                               ((ccsa.horizontalLeg - ccsa.radius - ccsa.thickness) +
+                                 (ccsa.verticalLeg - ccsa.radius - ccsa.thickness) +
+                                 (2.0 * Math.PI * (ccsa.radius + ccsa.thickness/2.0) * 0.25))
+
     type CC_DoubleAngle = {verticalLeg : float<inch>;
                            horizontalLeg : float<inch>;
                            thickness : float<inch>;
                            radius : float<inch>;
                            gap : float<inch>}
+
+                           member ccda.Blank = 
+                               ((ccda.horizontalLeg - ccda.radius - ccda.thickness) +
+                                 (ccda.verticalLeg - ccda.radius - ccda.thickness) +
+                                 (2.0 * Math.PI * (ccda.radius + ccda.thickness/2.0) * 0.25))
 
     type StructuralShape =
         | SingleAngle of SingleAngle
@@ -35,9 +44,8 @@ module StructuralShape =
         | CC_SingleAngle of CC_SingleAngle
         | CC_DoubleAngle of CC_DoubleAngle
 
-        
-        member ss.Description =
-            match ss with
+    let description ss =
+        match ss with
             | SingleAngle sa -> String.Format("L{0}x{1}x{2}",
                                               sa.verticalLeg, sa.horizontalLeg, sa.thickness)
             | DoubleAngle da -> String.Format("2L{0}x{1}x{2}x{3}",
@@ -49,40 +57,40 @@ module StructuralShape =
                                          ccda.verticalLeg, ccda.horizontalLeg,
                                          ccda.thickness, ccda.gap, ccda.radius)
 
-        member ss.Area =
+    let area ss =
             match ss with
             | SingleAngle sa -> (sa.horizontalLeg + sa.verticalLeg - sa.thickness) * sa.thickness
             | DoubleAngle da -> 2.0 * (da.horizontalLeg + da.verticalLeg - da.thickness) * da.thickness
-            | CC_SingleAngle ccsa -> ((ccsa.horizontalLeg - ccsa.radius) +
-                                      (ccsa.verticalLeg - ccsa.radius) +
-                                      (2.0 * Math.PI * ccsa.radius * 0.25)) * ccsa.thickness
-            | CC_DoubleAngle ccda -> 2.0 * ((ccda.horizontalLeg - ccda.radius) +
-                                            (ccda.verticalLeg - ccda.radius) +
-                                            (2.0 * Math.PI * ccda.radius * 0.25)) * ccda.thickness
+            | CC_SingleAngle ccsa -> ccsa.Blank * ccsa.thickness
+            | CC_DoubleAngle ccda -> 2.0 * ccda.Blank * ccda.thickness
 
-        member ss.xbar =
+    let xbar ss =
             match ss with
             | SingleAngle sa->
                 (sa.horizontalLeg * sa.thickness * sa.horizontalLeg/2.0 +
-                 ((sa.verticalLeg - sa.thickness) * sa.thickness * sa.thickness/2.0)) / (ss.Area)
+                 ((sa.verticalLeg - sa.thickness) * sa.thickness * sa.thickness/2.0)) / (area ss)
             | DoubleAngle _ -> 0.0<inch>
             | CC_DoubleAngle _ -> 0.0<inch>
 
-        member ss.ybar =
+    let ybar ss =
             match ss with
             | SingleAngle sa ->
                 ((sa.horizontalLeg - sa.thickness) * sa.thickness * sa.thickness/2.0 +
-                 (sa.verticalLeg * sa.thickness * sa.verticalLeg/2.0)) / (ss.Area)
+                 (sa.verticalLeg * sa.thickness * sa.verticalLeg/2.0)) / (area ss)
             | DoubleAngle da ->
                 ((da.horizontalLeg - da.thickness) * da.thickness * da.thickness/2.0 +
-                 (da.verticalLeg * da.thickness * da.verticalLeg/2.0)) / (ss.Area / 2.0)
+                 (da.verticalLeg * da.thickness * da.verticalLeg/2.0)) / (area ss / 2.0)
+
+    type StructuralShape with
+        member ss.Description = description ss
+        member ss.Area = area ss
+        member ss.xbar = xbar ss
+        member ss.ybar = ybar ss
 
 
-    let description (ss: StructuralShape) = ss.Description
-    let area (ss: StructuralShape) = ss.Area
-    let xbar (ss: StructuralShape) = ss.xbar
-    let ybar (ss: StructuralShape) = ss.ybar
     
+    
+
 
 
     
