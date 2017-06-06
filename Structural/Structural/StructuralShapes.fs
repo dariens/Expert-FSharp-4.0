@@ -44,6 +44,7 @@ module StructuralShapes =
         | CC_SingleAngle of CC_SingleAngle
         | CC_DoubleAngle of CC_DoubleAngle
 
+
     let description ss =
         match ss with
             | SingleAngle sa -> String.Format("L{0}x{1}x{2}",
