@@ -1,7 +1,6 @@
 ﻿namespace Structural
 
 open System
-open System.Collections.Generic
 
 [<Measure>] type inch
 
@@ -184,18 +183,29 @@ module StructuralShapes =
         | _ -> None
 
 
+
     type StructuralShape with
         member ss.Description = description ss
         member ss.Area = area ss
         member ss.Xbar = xbar ss
-        member ss.Yar = ybar ss
+        member ss.Ybar = ybar ss
+        member ss.Shape = getShape ss
 
-    let myPlate = Plate {length = 3.0<inch>;
-                         thickness = 0.25<inch>}
 
-    let test = tryGetShape<SingleAngle> myPlate
+module StructuralShapesOps =
+    open StructuralShapes
 
-   
+    let createSingleAngle vLeg hLeg t = SingleAngle {verticalLeg = vLeg;
+                                                     horizontalLeg = hLeg;
+                                                     thickness = t}
+                                                    
+    let createDoubleAngle vLeg hLeg t gap = DoubleAngle {verticalLeg = vLeg;
+                                                         horizontalLeg = hLeg;
+                                                         thickness = t;
+                                                         gap = gap}
+
+    let createPlate length t = Plate {length = length;
+                                      thickness = t;}
 
     
         

@@ -1,6 +1,7 @@
 ﻿namespace Structural
 
 open StructuralShapes
+open Structural.StructuralShapesOps
 
 module Testing =
 
@@ -30,8 +31,13 @@ module Testing =
     let myShapes = [mySingleAngle;myDoubleAngle;myCC_SingleAngle;myCC_DoubleAngle]
 
     myShapes 
-    |> List.map get_description
+    |> List.map description
     |> List.iter (fun s -> printfn "%s" s)
+
+    let myAngle = createSingleAngle 2.0<inch> 2.0<inch> 0.25<inch>
+
+    
+
 
 
                                                    
