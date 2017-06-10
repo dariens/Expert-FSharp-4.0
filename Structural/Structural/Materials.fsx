@@ -1,4 +1,7 @@
-#r @"C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\bin\Debug\Structural.dll"
+
+
+//#r @"C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\bin\Debug\Structural.dll"
+#r @"C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\bin\Debug\Structural.dll"
 open Structural
 open StructuralShapes
 open StructuralShapesOps
@@ -12,9 +15,3 @@ module AISC =
     type DoubleAngles =
         static member ``2L2x2x1/4`` = createDoubleAngle 2.0<inch> 2.0<inch> 0.25<inch> 1.0<inch>
         static member ``2L3x3x1/4`` = createDoubleAngle 3.0<inch> 3.0<inch> 0.25<inch> 1.0<inch>
-
-
-    
-
-
-

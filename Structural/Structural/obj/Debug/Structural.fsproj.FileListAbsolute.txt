@@ -6,3 +6,11 @@ C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\bin\Debug\Sy
 C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\bin\Debug\FSharp.Core.xml
 C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\obj\Debug\Structural.dll
 C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\obj\Debug\Structural.pdb
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\bin\Debug\Structural.XML
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\obj\Debug\Structural.dll
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\obj\Debug\Structural.pdb
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\bin\Debug\Structural.dll
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\bin\Debug\Structural.pdb
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\bin\Debug\FSharp.Core.dll
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\bin\Debug\System.ValueTuple.dll
+C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\bin\Debug\FSharp.Core.xml
