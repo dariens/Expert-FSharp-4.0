@@ -271,3 +271,194 @@ let adjustAspectRatio scene =
     scene |> mapRects (fun r -> RectangleF.Inflate(r, 1.1f, 1.0f/ 1.1f))
     
 /// Using On-Demand Computation with Domain Models
+
+let xml = @"
+<Composite>
+    <File file = 'spots.xml'/>
+    <File file = 'dots.xml'/>
+</Composite>"
+
+type Scene2 =
+    | Ellipse of RectangleF
+    | Rect of RectangleF
+    | Composite of Scene list
+    | Delay of Lazy<Scene>
+
+
+/// Caching Properties in Domain Models
+(*
+type SceneWithCachedBoundingBox =
+    | EllipseInfo of RectangleF
+    | RectInfo of RectangleF
+    | CompositeInfo of CompositeInfo
+and CompositeInfo =
+    { Scenes: SceneWithCachedBoundingBox list
+      mutable BoundingBoxCache : RectangleF option }
+
+    member x.BoundingBox =
+        match x with
+        | EllipseInfo rect | RectInfo rect -> rect
+        | CompositeInfo info ->
+            match info.cache with
+            | Some v -> v
+            | None ->
+                let bbox =
+                    info.Scenes
+                    |> List.map (fun s -> s.BoundingBox)
+                    |> List.reduce (fun r1 r2 -> RectangleF.Union(r1, r2))
+                info.cache <- Some bbox
+                bbox
+*)
+
+
+/// Memoizing Construction of Domain Model Nodes
+
+type Prop =
+    Prop of int
+
+and PropRepr =
+    | AndRepr of Prop * Prop
+    | OrRepr of Prop * Prop
+    | NotRepr of Prop
+    | VarRepr of string
+    | TrueRepr
+
+open System.Collections.Generic
+
+module PropOps =
+    let uniqStamp = ref 0
+    type internal PropTable() =
+        let fwdTable = new Dictionary<PropRepr, Prop>(HashIdentity.Structural)
+        let bwdTable = new Dictionary<int, PropRepr>(HashIdentity.Structural)
+        member t.ToUnique repr =
+            if fwdTable.ContainsKey repr then fwdTable.[repr]
+            else let stamp = incr uniqStamp; !uniqStamp
+                 let prop = Prop stamp
+                 fwdTable.Add (repr, prop)
+                 bwdTable.Add (stamp, repr)
+                 prop
+        member t.FromUnique (Prop stamp) =
+            bwdTable.[stamp]
+
+
+    let internal table = PropTable ()
+
+    let And (p1, p2) = table.ToUnique (AndRepr (p1, p2))
+    let Not p = table.ToUnique (NotRepr p)
+    let Or (p1, p2) = table.ToUnique (OrRepr (p1, p2))
+    let Var p = table.ToUnique (VarRepr p)
+    let True = table.ToUnique TrueRepr
+    let False = Not True
+
+    let getRepr p = table.FromUnique p
+
+
+module test =
+    open PropOps
+
+    True
+
+    let prop = And (Var "x", Var "y")
+
+    let repr = getRepr prop
+
+    let prop2 = And (Var "x", Var "y")
+
+
+/// Actie Patterns: Views for Structured Data
+
+[<Struct>]
+type Complex(r: float, i: float) =
+    static member Polar(mag, phase) = Complex(mag * cos phase, mag * sin phase)
+    member x.Magnitued = sqrt(r * r + i * i)
+    member x.Phase = atan2 i r
+    member x.RealPart = r
+    member x.ImaginaryPart = i
+
+let (|Rect|) (x : Complex) = (x.RealPart, x.ImaginaryPart)
+let (|Polar|) (x: Complex) = (x.Magnitued, x.Phase)
+
+let addViaRect a b =
+    match a, b with
+    | Rect (ar, ai), Rect (br, bi) -> Complex (ar + br, ai + bi)
+
+let mulViaRect a b =
+    match a, b with
+    | Rect (ar, ai), Rect (br, bi) -> Complex (ar * br - ai * bi, ai * br + bi * ar)
+
+let mulViaPolar a b =
+    match a, b with
+    | Polar (m, p), Polar (n, q) -> Complex.Polar (m * n, p + q)
+
+fsi.AddPrinter (fun (c: Complex) -> sprintf "%gr + %gi" c.RealPart c.ImaginaryPart)
+
+let c = Complex (3.0, 4.0)
+
+match c with
+| Rect (x, y) -> printfn "x = %g, y = %g" x y
+
+match c with
+| Polar (x, y) -> printfn "x = %g, y = %g" x y
+
+addViaRect c c
+
+mulViaRect c c
+
+mulViaPolar c c
+
+let (|Named|Array|Ptr|Param|) (typ : System.Type) =
+    if typ.IsGenericType
+    then Named(typ.GetGenericTypeDefinition(), typ.GetGenericArguments())
+    elif typ.IsGenericParameter then Param(typ.GenericParameterPosition)
+    elif not typ.HasElementType then Named(typ, [||])
+    elif typ.IsArray then Array(typ.GetElementType(), typ.GetArrayRank())
+    elif typ.IsByRef then Ptr(true, typ.GetElementType())
+    elif typ.IsPointer then Ptr(false, typ.GetElementType())
+    else failwith "MSDN says this can't happen"
+
+open System
+let rec formatType typ =
+    match typ with
+    | Named (con, [||]) -> sprintf "%s" con.Name
+    | Named (con, args) -> sprintf "%s<%s>" con.Name (formatTypes args)
+    | Array (arg, rank) -> sprintf "Array(%d,%s)" rank (formatType arg)
+    | Ptr(true, arg) -> sprintf "%s&" (formatType arg)
+    | Ptr(false, arg) -> sprintf "%s*" (formatType arg)
+    | Param(pos) -> sprintf "!%d" pos
+and formatTypes typs =
+    String.Join(",", Array.map formatType typs)
+
+let rec freeVarsAcc typ acc =
+    match typ with
+    | Array (arg, rank) -> freeVarsAcc arg acc
+    | Ptr (_, arg) -> freeVarsAcc arg acc
+    | Param _ -> (typ :: acc)
+    | Named (con, args) -> Array.foldBack freeVarsAcc args acc
+
+let freeVars typ = freeVarsAcc typ []
+
+/// Defining Partial and Parameterized Active atterns
+
+let (|MulThree|_|) inp = if inp % 3 = 0 then Some(inp/3) else None
+let (|MulSeven|_|) inp = if inp % 7 = 0 then Some(inp/7) else None
+
+let (|MulN|_|) n inp = if inp % n = 0 then Some(inp/n) else None
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
