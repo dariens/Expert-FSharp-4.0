@@ -1,15 +1,19 @@
-//#r @"C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\bin\Debug\Structural.dll"
-#r @"C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\bin\Debug\Structural.dll"
+#r @"C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\bin\Debug\Structural.dll"
+//#r @"C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\bin\Debug\Structural.dll"
 open Structural
 open Structural.Shapes
 open FSharp.Reflection
 
-//#load @"C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\Materials.fsx"
-//#load @"C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\ShapesDatabase.fsx"
+#load @"C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\MaterialDatabase.fsx"
+#load @"C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\ShapeDatabase.fsx"
+#load @"C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\SectionDatabase.fsx"
+
+
 
 //#load @"C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\MaterialDatabase.fsx"
 //#load @"C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\ShapeDatabase.fsx"
-#load @"C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\SectionDatabase.fsx"
+//#load @"C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\SectionDatabase.fsx"
+
 
 open SectionDatabase.Sections
 
@@ -19,6 +23,10 @@ printfn "Section :%s" mySection.Shape.Description
 printfn "Fu : %f" mySection.Material.Fu
 printfn "Properties: %A" mySection.Shape.DesignProperties
 
+let myShape = SingleAngle.create 3.0<inch> 2.0<inch> 0.25<inch>
+
+myShape.DesignProperties.
+    
 
 let myShapes =
     [for leg in [1.0<inch> .. 0.25<inch> .. 6.0<inch>] do

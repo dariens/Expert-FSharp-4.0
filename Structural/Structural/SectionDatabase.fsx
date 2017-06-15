@@ -1,9 +1,11 @@
-//#r @"C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\bin\Debug\Structural.dll"
-#r @"C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\bin\Debug\Structural.dll"
+#r @"C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\bin\Debug\Structural.dll"
+//#r @"C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\bin\Debug\Structural.dll"
 open Structural
 
-#load @"C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\MaterialDatabase.fsx"
-#load @"C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\ShapeDatabase.fsx"
+//#load @"C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\MaterialDatabase.fsx"
+//#load @"C:\Users\darien.shannon\Documents\Code\F#\Expert-FSharp-4.0\Structural\Structural\ShapeDatabase.fsx"
+#load @"C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\MaterialDatabase.fsx"
+#load @"C:\Users\user\Documents\CODE\F#\Expert F# 4.0\Structural\Structural\ShapeDatabase.fsx"
 
 module Sections =
 
